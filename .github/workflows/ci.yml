@@ -9,16 +9,22 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 concurrency:
-  group: ci-${{ github.head_ref }}
+  group: ci-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: 20
+
 jobs:
-  validate:
-    name: Lint → Type-check → Test → E2E → Build
+  # ── Step 1: Lint & Type Check (fast feedback) ──
+  quality:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - name: Checkout
@@ -27,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install dependencies
@@ -39,16 +45,167 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
-      - name: Unit & Integration Tests
-        run: npm run test
+  # ── Step 2: Unit & Integration Tests ──
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    needs: quality
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ── Step 3: E2E Tests ──
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: quality
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
-      - name: E2E Tests
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run E2E tests
         run: npm run test:e2e
+
+      - name: Upload E2E test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
+
+  # ── Step 4: Production Build ──
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [test, e2e]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build
         run: npm run build
         env:
           NEXT_PUBLIC_BUILD_ID: ${{ github.sha }}
+
+      - name: Report bundle size
+        run: |
+          if [ -d ".next" ]; then
+            echo "### 📦 Bundle Size" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Directory | Size |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|-----------|------|" >> "$GITHUB_STEP_SUMMARY"
+            du -sh .next/*/ 2>/dev/null | while read size dir; do
+              dirname=$(basename "$dir")
+              echo "| \`$dirname\` | $size |" >> "$GITHUB_STEP_SUMMARY"
+            done
+            TOTAL_SIZE=$(du -sh .next | cut -f1)
+            echo "| **Total** | **$TOTAL_SIZE** |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # ── Step 5: Security Audit ──
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: quality
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Dependency audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check for known vulnerabilities
+        run: |
+          echo "### 🔒 Security Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          npm audit --json 2>/dev/null | node -e "
+            const data = require('fs').readFileSync('/dev/stdin', 'utf8');
+            try {
+              const audit = JSON.parse(data);
+              const vulns = audit.metadata?.vulnerabilities || {};
+              const total = Object.values(vulns).reduce((a, b) => a + b, 0);
+              if (total === 0) {
+                console.log('✅ No known vulnerabilities found.');
+              } else {
+                console.log('| Severity | Count |');
+                console.log('|----------|-------|');
+                for (const [sev, count] of Object.entries(vulns)) {
+                  if (count > 0) console.log('| ' + sev + ' | ' + count + ' |');
+                }
+              }
+            } catch(e) {
+              console.log('⚠️ Could not parse audit results.');
+            }
+          " >> "$GITHUB_STEP_SUMMARY" || true

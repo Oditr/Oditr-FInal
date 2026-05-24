@@ -1,0 +1,48 @@
+# ──────────────────────────────────────────────────────────
+# VitalFix — Stale Issue & PR Management
+# Automatically labels and closes stale issues/PRs.
+# ──────────────────────────────────────────────────────────
+
+name: "Stale Management"
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"  # Every Monday at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Mark & Close Stale
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Manage stale issues and PRs
+        uses: actions/stale@v9
+        with:
+          days-before-stale: 30
+          days-before-close: 14
+          stale-issue-label: stale
+          stale-pr-label: stale
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has not
+            had recent activity. It will be closed in 14 days if no further
+            activity occurs. If this issue is still relevant, please leave a
+            comment or remove the stale label.
+          stale-pr-message: >
+            This pull request has been automatically marked as stale because it
+            has not had recent activity. It will be closed in 14 days if no
+            further activity occurs. Please update or close it if it's no
+            longer needed.
+          close-issue-message: >
+            This issue was closed because it has been stale for 14 days with no
+            activity. Feel free to reopen if it's still relevant.
+          close-pr-message: >
+            This PR was closed because it has been stale for 14 days with no
+            activity. Feel free to reopen if it's still needed.
+          exempt-issue-labels: "daily-health,pinned,security"
+          exempt-pr-labels: "pinned,security"

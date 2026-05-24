@@ -1,0 +1,27 @@
+# ── VitalFix Code Owners ──
+# Defines who is automatically requested for review on PRs.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @tushar
+
+# Core business logic
+src/lib/plans.ts @tushar
+src/lib/api-auth.ts @tushar
+src/lib/audit-engine/ @tushar
+
+# API routes (security-sensitive)
+src/app/api/ @tushar
+
+# Auth middleware
+middleware.ts @tushar
+
+# Database schemas
+supabase/ @tushar
+
+# CI/CD pipeline
+.github/ @tushar
+
+# Configuration files
+next.config.js @tushar
+.coderabbit.yaml @tushar

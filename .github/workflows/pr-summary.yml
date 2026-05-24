@@ -1,0 +1,153 @@
+# ──────────────────────────────────────────────────────────
+# VitalFix — PR Change Summary
+# Posts a structured summary comment on every PR with file
+# categorization, risk assessment, and test coverage checks.
+# ──────────────────────────────────────────────────────────
+
+name: "PR Change Summary"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-summary:
+    name: PR Summary & Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for diff analysis
+
+      - name: Generate PR summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+
+            // Categorize changed files
+            const categories = {
+              '🧪 Tests': [],
+              '🔧 Config': [],
+              '📦 Dependencies': [],
+              '🎨 UI Components': [],
+              '⚙️ API Routes': [],
+              '📚 Library/Utils': [],
+              '🗄️ Database': [],
+              '🔄 CI/CD': [],
+              '📄 Other': [],
+            };
+
+            for (const file of files) {
+              const f = file.filename;
+              if (f.includes('__tests__') || f.includes('.test.') || f.includes('.spec.') || f.startsWith('e2e/'))
+                categories['🧪 Tests'].push(file);
+              else if (f.includes('.github/') || f.includes('.coderabbit'))
+                categories['🔄 CI/CD'].push(file);
+              else if (f === 'package.json' || f === 'package-lock.json')
+                categories['📦 Dependencies'].push(file);
+              else if (f.includes('config') || f.endsWith('.json') || f.endsWith('.yaml') || f.endsWith('.yml'))
+                categories['🔧 Config'].push(file);
+              else if (f.startsWith('src/components/'))
+                categories['🎨 UI Components'].push(file);
+              else if (f.includes('/api/'))
+                categories['⚙️ API Routes'].push(file);
+              else if (f.startsWith('src/lib/'))
+                categories['📚 Library/Utils'].push(file);
+              else if (f.startsWith('supabase/'))
+                categories['🗄️ Database'].push(file);
+              else
+                categories['📄 Other'].push(file);
+            }
+
+            // Build summary
+            let summary = `## 📊 PR Change Summary\n\n`;
+            summary += `**Files changed:** ${files.length} | `;
+            summary += `**Additions:** +${files.reduce((a, f) => a + f.additions, 0)} | `;
+            summary += `**Deletions:** -${files.reduce((a, f) => a + f.deletions, 0)}\n\n`;
+
+            for (const [category, categoryFiles] of Object.entries(categories)) {
+              if (categoryFiles.length > 0) {
+                summary += `### ${category} (${categoryFiles.length})\n`;
+                for (const f of categoryFiles) {
+                  const badge = f.status === 'added' ? '🆕' : f.status === 'removed' ? '🗑️' : '📝';
+                  summary += `- ${badge} \`${f.filename}\` (+${f.additions}/-${f.deletions})\n`;
+                }
+                summary += '\n';
+              }
+            }
+
+            // Risk assessment
+            const riskFactors = [];
+            if (categories['⚙️ API Routes'].length > 0) riskFactors.push('API routes changed — verify auth & rate limiting');
+            if (categories['🗄️ Database'].length > 0) riskFactors.push('Database schema changed — check migration safety');
+            if (categories['📦 Dependencies'].length > 0) riskFactors.push('Dependencies updated — check for breaking changes');
+            if (files.some(f => f.filename === 'middleware.ts')) riskFactors.push('Middleware changed — verify auth flow');
+            if (files.some(f => f.filename.includes('plans.ts'))) riskFactors.push('Plan/quota logic changed — verify tier consistency');
+
+            if (riskFactors.length > 0) {
+              summary += `### ⚠️ Review Attention\n`;
+              for (const factor of riskFactors) {
+                summary += `- ${factor}\n`;
+              }
+              summary += '\n';
+            }
+
+            // Check if tests were added for new source files
+            const newSourceFiles = files.filter(f =>
+              f.status === 'added' &&
+              f.filename.startsWith('src/') &&
+              !f.filename.includes('__tests__') &&
+              !f.filename.includes('.test.') &&
+              (f.filename.endsWith('.ts') || f.filename.endsWith('.tsx'))
+            );
+            const newTestFiles = files.filter(f =>
+              f.status === 'added' &&
+              (f.filename.includes('__tests__') || f.filename.includes('.test.'))
+            );
+
+            if (newSourceFiles.length > 0 && newTestFiles.length === 0) {
+              summary += `> [!NOTE]\n> New source files added without corresponding tests. Consider adding test coverage.\n\n`;
+            }
+
+            summary += `---\n*Generated by VitalFix CI • CodeRabbit will provide detailed review*`;
+
+            // Post or update comment
+            const TAG = '<!-- pr-summary -->';
+            const body = `${TAG}\n${summary}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const existing = comments.find(c => c.body?.includes(TAG));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: body,
+              });
+            }

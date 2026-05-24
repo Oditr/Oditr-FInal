@@ -6,21 +6,105 @@ language: en-US
 reviews:
   profile: chill          # balanced review intensity
   high_level_summary: true
+  poem: false
+  collapse_walkthrough: false
+  sequence_diagrams: true
+
   auto_review:
     enabled: true
     drafts: false          # skip draft PRs
+    base_branches:
+      - main
+      - develop
 
+  # File-level review instructions
   path_instructions:
     - path: "src/lib/**"
-      instructions: "Core business logic — flag any breaking changes to exported functions, quota enforcement, or plan gating."
+      instructions: >
+        Core business logic — flag any breaking changes to exported functions,
+        quota enforcement, or plan gating. Verify all Supabase queries use
+        proper null checks (supabase may be null when not configured).
+
     - path: "src/app/api/**"
-      instructions: "API routes — check for security issues, missing auth checks, quota enforcement, and proper error handling."
+      instructions: >
+        API routes — check for security issues: missing auth checks, SSRF
+        vulnerabilities, quota enforcement, proper error handling with status
+        codes, and rate-limit header propagation.
+
     - path: "src/app/dashboard/**"
-      instructions: "Dashboard UI — watch for unused imports, broken prop types, and accessibility issues. Some icons and imports may be reserved for upcoming features."
+      instructions: >
+        Dashboard UI — watch for unused imports, broken prop types, and
+        accessibility issues. Verify loading states and error boundaries.
+        Some icons and imports may be reserved for upcoming features.
+
     - path: "src/app/pricing/**"
-      instructions: "Pricing page — verify tier data matches plans.ts. All 4 tiers must be consistent."
+      instructions: >
+        Pricing page — verify tier data matches plans.ts. All 4 tiers
+        (Free, Starter, Pro, Enterprise) must be consistent.
+
+    - path: "src/components/**"
+      instructions: >
+        Shared components — ensure proper TypeScript typing for all props,
+        check for accessibility (aria labels, semantic HTML), verify theme
+        support via data-theme attributes.
+
+    - path: "src/__tests__/**"
+      instructions: >
+        Unit/integration tests — ensure tests use proper mocking (vi.mock)
+        and don't make real network calls. Check test isolation and that
+        mocks are reset in beforeEach. Verify coverage of edge cases.
+
+    - path: "e2e/**"
+      instructions: >
+        E2E tests — verify selectors are resilient (prefer role-based or
+        test-id selectors over CSS classes). Check that tests don't depend
+        on external services or specific data states.
+
     - path: "supabase/**"
-      instructions: "Database schemas — flag any destructive migrations or missing RLS policies."
+      instructions: >
+        Database schemas — flag any destructive migrations or missing RLS
+        policies. Verify column types and constraints are appropriate.
+
+    - path: "middleware.ts"
+      instructions: >
+        Auth middleware — verify protected route patterns are correct,
+        ensure no auth bypass vulnerabilities, check cookie handling.
+
+    - path: ".github/workflows/**"
+      instructions: >
+        CI/CD workflows — verify action versions are pinned, check for
+        missing env vars, verify caching is properly configured, and
+        ensure secrets are not exposed in logs.
+
+    - path: "next.config.js"
+      instructions: >
+        Next.js config — verify security headers are complete, check
+        Sentry config, verify experimental features are intentional.
+
+  # Review tools configuration
+  tools:
+    eslint:
+      enabled: true
+    biome:
+      enabled: false
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
 
 chat:
   auto_reply: true
+
+# Knowledge base for contextual reviews
+knowledge_base:
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  jira:
+    project_keys: []
+  pull_requests:
+    scope: auto
