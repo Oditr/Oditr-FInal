@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 
 export default function GlobalError({
@@ -12,7 +11,14 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    Sentry.captureException(error)
+    // Only load and report to Sentry in production
+    if (process.env.NODE_ENV === 'production') {
+      import('@sentry/nextjs').then((Sentry) => {
+        Sentry.captureException(error)
+      })
+    } else {
+      console.error('[GlobalError]', error)
+    }
   }, [error])
   return (
     <html lang="en">

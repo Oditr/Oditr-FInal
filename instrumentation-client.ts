@@ -1,24 +1,28 @@
-import * as Sentry from "@sentry/nextjs";
+// Only initialize Sentry client-side SDK in production.
+// In dev, this pulls in the entire @sentry/nextjs + replay SDK,
+// adding ~100s to the first page compilation on 8GB machines.
+if (process.env.NODE_ENV === "production") {
+  import("@sentry/nextjs").then((Sentry) => {
+    Sentry.init({
+      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+      enabled: true,
+      sendDefaultPii: true,
+      tracesSampleRate: 0.1,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      integrations: [
+        Sentry.replayIntegration(),
+      ],
+    });
+  });
+}
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+// Router transition tracking (no-op in dev)
+export const onRouterTransitionStart = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "production") {
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureRouterTransitionStart(...(args as Parameters<typeof Sentry.captureRouterTransitionStart>));
+    });
+  }
+};
 
-  // Completely disable Sentry in development to avoid proxy/DNS errors
-  enabled: process.env.NODE_ENV === "production",
-
-  sendDefaultPii: true,
-
-  // 10% of sessions in production
-  tracesSampleRate: 0.1,
-
-  // Session Replay: 10% of all sessions, 100% of sessions with errors
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
-  integrations: [
-    Sentry.replayIntegration(),
-  ],
-});
-
-// Hook into App Router navigation transitions
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

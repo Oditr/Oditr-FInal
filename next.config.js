@@ -40,20 +40,20 @@ const nextConfig = {
   poweredByHeader: false,
 }
 
-module.exports = withSentryConfig(nextConfig, {
-  // Sentry organization and project slugs
-  org: process.env.SENTRY_ORG || "___ORG_SLUG___",
-  project: process.env.SENTRY_PROJECT || "javascript-nextjs",
+// Only wrap with Sentry webpack plugin in production.
+// In dev, the Sentry plugin instruments every module at compile time,
+// adding 30-90s overhead per page load — completely unnecessary since
+// Sentry is disabled at runtime in dev anyway.
+const finalConfig = process.env.NODE_ENV === 'production'
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG || "___ORG_SLUG___",
+      project: process.env.SENTRY_PROJECT || "javascript-nextjs",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      widenClientFileUpload: true,
+      tunnelRoute: "/monitoring",
+      silent: !process.env.CI,
+    })
+  : nextConfig
 
-  // Source map upload auth token
-  authToken: process.env.SENTRY_AUTH_TOKEN,
+module.exports = finalConfig
 
-  // Upload wider set of client source files for better stack traces
-  widenClientFileUpload: true,
-
-  // Proxy API route to bypass ad-blockers (disabled in dev to prevent DNS errors)
-  tunnelRoute: process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
-
-  // Suppress build output in non-CI environments
-  silent: !process.env.CI,
-})
