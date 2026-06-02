@@ -55,8 +55,9 @@ function scoreColor(score: number): string {
 }
 
 // ── Dynamic OG metadata ──
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const report = await getReport(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const report = await getReport(id)
 
   if (!report) {
     return { title: 'Report Not Found — VitalFix' }
@@ -73,7 +74,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       title: `${emoji} ${domain} — ${score}/100 Web Vitals Score`,
       description: `See the full Core Web Vitals breakdown for ${domain}. Performance: ${report.scores?.performance ?? 'N/A'}/100. Run your own audit free.`,
       type: 'website',
-      url: `https://vitalfix.dev/report/${params.id}`,
+      url: `https://vitalfix.dev/report/${id}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -84,8 +85,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 // ── Page Component ──
-export default async function ReportPage({ params }: { params: { id: string } }) {
-  const report = await getReport(params.id)
+export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const report = await getReport(id)
 
   if (!report) {
     return (

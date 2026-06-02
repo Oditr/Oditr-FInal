@@ -16,7 +16,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 function getStripe(): Stripe | null {
   if (!stripeSecretKey) return null
-  return new Stripe(stripeSecretKey, { apiVersion: '2026-03-25.dahlia' })
+  return new Stripe(stripeSecretKey, { apiVersion: '2026-05-27.dahlia' })
 }
 
 function getServiceSupabase() {

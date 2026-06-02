@@ -9,7 +9,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
 function getStripe(): Stripe | null {
   if (!stripeSecretKey) return null
-  return new Stripe(stripeSecretKey, { apiVersion: '2026-03-25.dahlia' })
+  return new Stripe(stripeSecretKey, { apiVersion: '2026-05-27.dahlia' })
 }
 
 export async function POST(req: NextRequest) {

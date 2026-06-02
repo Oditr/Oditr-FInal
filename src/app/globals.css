@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fonts loaded via next/font/google in layout.tsx (self-hosted, no external requests) */
 
 @tailwind base;
 @tailwind components;
@@ -86,7 +86,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text-primary);
   min-height: 100vh;
@@ -448,7 +448,7 @@ body {
    UTILITY
    ══════════════════════════════════════════════ */
 
-.font-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+.font-mono { font-family: var(--font-mono), 'JetBrains Mono', 'Fira Code', monospace; }
 .section-pad { padding: 5rem 0; }
 .container-pad { max-width: 1120px; margin: 0 auto; padding: 0 1.5rem; }
 .divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }

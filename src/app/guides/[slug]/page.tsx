@@ -10,8 +10,9 @@ export async function generateStaticParams() {
 }
 
 // ── Dynamic metadata ──
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const guide = getGuideBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const guide = getGuideBySlug(slug)
   if (!guide) return { title: 'Guide Not Found — VitalFix' }
 
   return {
@@ -117,8 +118,9 @@ function renderContent(content: string) {
   })
 }
 
-export default function GuidePage({ params }: { params: { slug: string } }) {
-  const guide = getGuideBySlug(params.slug)
+export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const guide = getGuideBySlug(slug)
 
   if (!guide) {
     return (
