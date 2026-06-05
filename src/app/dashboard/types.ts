@@ -1,5 +1,7 @@
 // ── Dashboard shared types ──
 
+import type { IntelligenceReport } from '@/lib/intelligence'
+
 export type CwvMetric = { value: string; score: number; numericValue?: number }
 export type FieldDataMetric = { p75: number; category: string } | null
 export type Severity = 'critical' | 'moderate' | 'minor' | 'info'
@@ -81,5 +83,9 @@ export type AuditResult = {
   partial?: boolean
   partialReason?: string
   liteMode?: boolean
+  /** VitalFix Intelligence Report — prioritized issues, business impact, framework detection */
+  intelligence?: IntelligenceReport | null
 }
 
+// Re-export intelligence types for convenience in dashboard components
+export type { IntelligenceReport, PrioritizedIssue, PriorityTier, BusinessSummary, MetricNarrative, FrameworkDetection, SiteContext, TrustAssessment } from '@/lib/intelligence'

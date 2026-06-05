@@ -52,6 +52,27 @@ async function runWithTimeout(
  * Fetches the page once, parses HTML once, then runs all 8 audit modules in parallel.
  */
 export async function runCustomAudit(url: string): Promise<CustomAuditResult> {
+  const { auditResult } = await runCustomAuditWithMeta(url)
+  return auditResult
+}
+
+/** Result from runCustomAuditWithMeta — includes raw HTML/headers for intelligence engine */
+export interface CustomAuditWithMeta {
+  auditResult: CustomAuditResult
+  /** Raw HTML for framework/context detection in the intelligence engine */
+  html: string
+  /** HTTP response headers for framework detection */
+  headers: Record<string, string>
+}
+
+/**
+ * Run the full custom audit engine and return both the result
+ * AND the raw HTML/headers needed by the intelligence engine.
+ *
+ * This avoids a second HTTP fetch — the intelligence engine reuses
+ * the same HTML that the audit modules already parsed.
+ */
+export async function runCustomAuditWithMeta(url: string): Promise<CustomAuditWithMeta> {
   const start = Date.now()
 
   // Step 1: Fetch the page (shared across all modules)
@@ -61,22 +82,43 @@ export async function runCustomAudit(url: string): Promise<CustomAuditResult> {
   const $ = cheerio.load(fetched.html)
 
   // Step 3: Run all modules in parallel with individual timeouts
+  const moduleNames = [
+    'broken-links', 'images', 'assets', 'meta-tags',
+    'headings', 'security', 'mobile', 'accessibility',
+  ]
   const results = await Promise.allSettled(
     modules.map(mod => runWithTimeout(mod, fetched, $, MODULE_TIMEOUT))
   )
 
-  // Step 4: Collect results (skip failed/timed-out modules)
+  // Step 4: Collect results (log failed/timed-out modules)
   const categories: CategoryResult[] = []
-  for (const r of results) {
+  let passed = 0, failed = 0, timedOut = 0
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    const name = moduleNames[i] || `module-${i}`
     if (r.status === 'fulfilled' && r.value !== null) {
       categories.push(r.value)
+      passed++
+    } else if (r.status === 'fulfilled' && r.value === null) {
+      timedOut++
+      console.warn(`[audit-engine] Module "${name}" timed out after ${MODULE_TIMEOUT}ms`)
+    } else if (r.status === 'rejected') {
+      failed++
+      console.error(`[audit-engine] Module "${name}" failed:`, r.reason)
     }
   }
 
   const duration = Date.now() - start
+  console.info(`[audit-engine] Completed in ${duration}ms — ${passed} passed, ${timedOut} timed out, ${failed} failed`)
 
   // Step 5: Build the final result with scoring
-  return buildCustomAuditResult(url, categories, duration)
+  const auditResult = buildCustomAuditResult(url, categories, duration)
+
+  return {
+    auditResult,
+    html: fetched.html,
+    headers: fetched.headers,
+  }
 }
 
 // Re-export types for convenience

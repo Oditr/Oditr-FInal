@@ -3,7 +3,8 @@
 // Includes caching, rate limiting, and structured error handling
 
 import { NextRequest, NextResponse } from 'next/server'
-import { runCustomAudit, calculateHealthScore } from '@/lib/audit-engine'
+import { runCustomAuditWithMeta, calculateHealthScore } from '@/lib/audit-engine'
+import { buildIntelligenceReport } from '@/lib/intelligence'
 import { cacheKey, getCached, setCache } from '@/lib/audit-engine/cache'
 import { fetchPSI, getPoolStatus } from '@/lib/psi-pool'
 import { trackAuditEvent, updateDailyCounters } from '@/lib/analytics'
@@ -414,8 +415,16 @@ export async function GET(req: NextRequest) {
 
   try {
     // ── Wrap custom audit with its own timeout (resolves null, never rejects) ──
+    // Use runCustomAuditWithMeta to capture raw HTML/headers for the intelligence engine
+    let auditHtml: string | undefined
+    let auditHeaders: Record<string, string> | undefined
+
     const customAuditWithTimeout = Promise.race([
-      runCustomAudit(parsedUrl.href).catch((err) => {
+      runCustomAuditWithMeta(parsedUrl.href).then((meta) => {
+        auditHtml = meta.html
+        auditHeaders = meta.headers
+        return meta.auditResult
+      }).catch((err) => {
         customError = err?.message || 'Custom audit failed'
         console.warn('[audit API] Custom audit error:', customError)
         return null
@@ -512,6 +521,17 @@ export async function GET(req: NextRequest) {
       ? calculateHealthScore(psiPerf, customScore)
       : lighthouseResult ? psiPerf : customScore
 
+    // ── Build VitalFix Intelligence Report ──
+    // Runs in ~1-5ms — pure in-process computation, no I/O
+    const intelligenceReport = buildIntelligenceReport({
+      url: parsedUrl.href,
+      psiData: lighthouseResult,
+      customAudit: customAuditResult,
+      html: auditHtml,
+      headers: auditHeaders,
+      hasFieldData: !!lighthouseResult?.fieldData,
+    })
+
     const response = {
       ...(lighthouseResult || { url: parsedUrl.href, strategy, fetchedAt: new Date().toISOString(), scores: null, cwv: null, fieldData: null, opportunities: [], diagnostics: [] }),
       customAudit: customAuditResult || null,
@@ -519,6 +539,8 @@ export async function GET(req: NextRequest) {
       fromCache: false,
       partial: !lighthouseResult || !customAuditResult,
       partialReason: !lighthouseResult ? (psiError || 'PSI unavailable') : !customAuditResult ? (customError || 'Custom audit unavailable') : undefined,
+      // ── VitalFix Intelligence Layer ──
+      intelligence: intelligenceReport,
       // ── Audit context: connection + location metadata ──
       auditContext: {
         connection: { id: connProfile.id, label: connProfile.label, throughputMbps: connProfile.throughputMbps, expectedRttMs: connProfile.expectedRttMs },

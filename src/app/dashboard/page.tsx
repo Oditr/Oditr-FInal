@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Search, AlertTriangle, ArrowRight, Terminal, Globe, Wifi, Smartphone, Monitor, MapPin, GitCompare, Zap, BarChart3, Eye, ShieldCheck, Shield, Star, ExternalLink, RefreshCw, CheckCircle, XCircle, Clock, WifiOff, Timer, Ban, AlertCircle, Share2, Link2, Rocket, Download, Lock } from 'lucide-react'
+import { Search, AlertTriangle, ArrowRight, Terminal, Globe, Wifi, Smartphone, Monitor, MapPin, GitCompare, Zap, BarChart3, Eye, ShieldCheck, Shield, Star, ExternalLink, RefreshCw, CheckCircle, XCircle, Clock, WifiOff, Timer, Ban, AlertCircle, Share2, Link2, Rocket, Download, Lock, Sparkles } from 'lucide-react'
 import ScoreRing from '@/components/ScoreRing'
 import Link from 'next/link'
 import type { AuditResult } from './types'
@@ -10,6 +10,7 @@ import OpportunitiesTab from './OpportunitiesTab'
 import DiagnosticsTab from './DiagnosticsTab'
 import FieldDataTab from './FieldDataTab'
 import SiteAuditTab from './SiteAuditTab'
+import IntelligenceTab from './IntelligenceTab'
 import HistoryTab from './HistoryTab'
 import AnalyticsTab from './AnalyticsTab'
 import { saveScan, getHistory } from '@/lib/scan-store'
@@ -55,7 +56,7 @@ export default function DashboardPage() {
   const [location, setLocation] = useState('US East (Virginia)')
   const [connection, setConnection] = useState('4G (Fast)')
   const [runCount, setRunCount] = useState(0)
-  const [activeTab, setActiveTab] = useState<'overview' | 'opportunities' | 'diagnostics' | 'field' | 'siteaudit' | 'history' | 'analytics'>('overview')
+  const [activeTab, setActiveTab] = useState<'intelligence' | 'overview' | 'opportunities' | 'diagnostics' | 'field' | 'siteaudit' | 'history' | 'analytics'>('intelligence')
 
   // Progress tracking state
   const [elapsed, setElapsed] = useState(0)
@@ -152,7 +153,7 @@ export default function DashboardPage() {
     setAuditError(null)
     setPrevResult(result)
     setResult(null)
-    setActiveTab('overview')
+    setActiveTab('intelligence')
     setRetryInfo(null)
     setCurrentStage({ stage: 'connecting', label: 'Connecting', detail: 'Starting audit…', progress: 5 })
     startProgressTimer()
@@ -768,6 +769,7 @@ export default function DashboardPage() {
             {/* ── Tab navigation — underline style ── */}
             <div id="tab-navigation" style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto' }}>
               {([
+                { id: 'intelligence', label: `Intelligence (${result.intelligence?.totalIssues ?? 0})`, icon: <Sparkles size={13} /> },
                 { id: 'overview', label: 'Core Web Vitals', icon: <BarChart3 size={13} /> },
                 { id: 'siteaudit', label: `Site Audit (${result.customAudit?.totalFindings ?? 0})`, icon: <ShieldCheck size={13} /> },
                 { id: 'opportunities', label: `Opportunities (${result.opportunities?.length ?? 0})`, icon: <Zap size={13} /> },
@@ -783,6 +785,7 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Tab content ── */}
+            {activeTab === 'intelligence' && <IntelligenceTab result={result} />}
             {activeTab === 'overview' && <OverviewTab result={result} />}
             {activeTab === 'opportunities' && <OpportunitiesTab result={result} />}
             {activeTab === 'diagnostics' && <DiagnosticsTab result={result} />}
