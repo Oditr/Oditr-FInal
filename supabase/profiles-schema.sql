@@ -12,6 +12,7 @@ create table if not exists public.profiles (
   plan_expires_at         timestamptz,
   daily_audit_count       integer not null default 0,
   daily_audit_reset       date not null default current_date,
+  default_workspace_id    text,
   created_at              timestamptz default now(),
   updated_at              timestamptz default now()
 );
@@ -23,9 +24,23 @@ create index if not exists idx_profiles_stripe_customer
 -- ── Auto-create profile on user signup ──
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  new_workspace_id text;
 begin
-  insert into public.profiles (id, plan)
-  values (new.id, 'free');
+  new_workspace_id := 'ws_' || substr(md5(random()::text), 1, 12);
+
+  -- Create personal workspace
+  insert into public.workspaces (id, name, slug, type, owner_id)
+  values (new_workspace_id, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)) || '''s Workspace', new_workspace_id, 'individual', new.id);
+
+  -- Add user as owner in workspace_members
+  insert into public.workspace_members (workspace_id, user_id, role)
+  values (new_workspace_id, new.id, 'owner');
+
+  -- Create profile
+  insert into public.profiles (id, plan, default_workspace_id)
+  values (new.id, 'free', new_workspace_id);
+
   return new;
 end;
 $$ language plpgsql security definer;

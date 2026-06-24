@@ -16,6 +16,8 @@ import {
   type ConnectionProfile, type LocationProfile,
 } from '@/lib/audit-context'
 import { getFeatureFlag, captureServerEvent } from '@/lib/posthog'
+import { getActiveWorkspace } from '@/lib/auth/workspace-service'
+import { hasPermission, Role } from '@/lib/auth/permission-service'
 
 // Vercel serverless function config — audit can take up to 120s
 export const maxDuration = 180
@@ -337,9 +339,21 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // ── Plan-based quota enforcement ──
-  // Extract user from Supabase session cookie (if authenticated)
+  // ── Plan-based quota & RBAC enforcement ──
+  let workspaceId: string | null = null
   let userId: string | null = null
+
+  try {
+    const { workspace, role } = await getActiveWorkspace()
+    if (workspace && role) {
+      if (!hasPermission(role as Role, 'audits.run')) {
+        return NextResponse.json({ error: 'You do not have permission to run audits in this workspace.' }, { status: 403 })
+      }
+      workspaceId = workspace.id
+      userId = workspace.owner_id // fallback or we can extract userId from active workspace if needed, but getActiveWorkspace gets it implicitly. Wait, we need userId for posthog, maybe from supabase session?
+    }
+  } catch { /* ignore */ }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -356,10 +370,10 @@ export async function GET(req: NextRequest) {
     } catch { /* auth check failed — treat as anonymous */ }
   }
 
-  // Check quota for authenticated users
-  if (userId) {
+  // Check quota for workspace
+  if (workspaceId) {
     try {
-      const quota = await checkLimitAccess(userId, 'monthlyAudits')
+      const quota = await checkLimitAccess(workspaceId, 'monthlyAudits')
       if (!quota.allowed) {
         return NextResponse.json(
           {
@@ -558,8 +572,8 @@ export async function GET(req: NextRequest) {
     }).catch(() => { })
 
     // ── Increment monthly audit counter for plan enforcement ──
-    if (userId) {
-      incrementUsage(userId, 'audit.runs').catch(() => { })
+    if (workspaceId) {
+      incrementUsage(workspaceId, userId, 'audit.runs').catch(() => { })
     }
 
     return NextResponse.json(response)

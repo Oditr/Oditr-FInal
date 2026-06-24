@@ -6,8 +6,8 @@ import { getSubscription } from './subscription-service'
  * Format: YYYY-MM based on the subscription's current_period_start,
  * or the current calendar month if no subscription exists.
  */
-export async function getCurrentBillingPeriod(userId: string): Promise<string> {
-  const sub = await getSubscription(userId)
+export async function getCurrentBillingPeriod(workspaceId: string): Promise<string> {
+  const sub = await getSubscription(workspaceId)
   let dateToUse = new Date()
   
   if (sub && sub.currentPeriodStart) {
@@ -26,15 +26,15 @@ export async function getCurrentBillingPeriod(userId: string): Promise<string> {
 /**
  * Get current usage for a specific feature key in the current billing period.
  */
-export async function getUsageCount(userId: string, featureKey: string): Promise<number> {
+export async function getUsageCount(workspaceId: string, featureKey: string): Promise<number> {
   if (!supabase) return 0
   
-  const period = await getCurrentBillingPeriod(userId)
+  const period = await getCurrentBillingPeriod(workspaceId)
   
   const { data, error } = await supabase
     .from('usage_records')
     .select('quantity')
-    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
     .eq('feature_key', featureKey)
     .eq('billing_period', period)
 
@@ -46,15 +46,15 @@ export async function getUsageCount(userId: string, featureKey: string): Promise
 /**
  * Get multiple usage counts at once.
  */
-export async function getUsageSummary(userId: string, featureKeys: string[]): Promise<Record<string, number>> {
+export async function getUsageSummary(workspaceId: string, featureKeys: string[]): Promise<Record<string, number>> {
   if (!supabase) return Object.fromEntries(featureKeys.map(k => [k, 0]))
   
-  const period = await getCurrentBillingPeriod(userId)
+  const period = await getCurrentBillingPeriod(workspaceId)
   
   const { data, error } = await supabase
     .from('usage_records')
     .select('feature_key, quantity')
-    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
     .eq('billing_period', period)
     .in('feature_key', featureKeys)
 
@@ -74,15 +74,16 @@ export async function getUsageSummary(userId: string, featureKeys: string[]): Pr
 /**
  * Increment usage for a specific feature key.
  */
-export async function incrementUsage(userId: string, featureKey: string, quantity: number = 1, metadata?: any): Promise<void> {
+export async function incrementUsage(workspaceId: string, userId: string | null, featureKey: string, quantity: number = 1, metadata?: any): Promise<void> {
   if (!supabase) return
 
-  const period = await getCurrentBillingPeriod(userId)
+  const period = await getCurrentBillingPeriod(workspaceId)
 
   const { error } = await supabase
     .from('usage_records')
     .insert({
       id: crypto.randomUUID(),
+      workspace_id: workspaceId,
       user_id: userId,
       feature_key: featureKey,
       quantity,

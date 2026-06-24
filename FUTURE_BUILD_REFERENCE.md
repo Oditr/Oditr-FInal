@@ -14,9 +14,15 @@ This document tracks pending features, technical debt, and ideas for future impl
 ## 3. DevOps & CI/CD Integrations
 - **CI/CD Plugins**: Build GitHub Actions / GitLab CI integrations to run Øditr audits as part of the build pipeline and block deployments if regression thresholds are crossed.
 
-## 4. Enterprise & Agency Features
-- **Agency White-Labeling**: Allow agencies to customize reports with their branding, custom domains, and specific messaging.
-- **Multi-Tenant Alert Routing**: More complex enterprise alert routing (e.g., routing specific categories of errors to specific teams).
+## 4. Billing & SaaS Engine Extensions
+- **Stripe Metered Billing Sync**: Currently, usage is metered locally in `usage_records`. For true pay-as-you-go overages, implement Stripe `usage_records` API push.
+- **Invoice PDF Generation**: Provide a native UI to download past invoices (currently redirects to Stripe Customer Portal).
 
-## 5. Global Cron / Scheduling
+## 5. Auth, Workspaces & Permissions Extensions
+- **SSO & SAML**: Implement Enterprise single sign-on (SSO/SAML) via Supabase Auth.
+- **Workspace Settings UI**: Flesh out the full UI for inviting/removing members, assigning roles, and managing workspace billing.
+- **API Token Management UI**: UI to generate and revoke API and CI/CD tokens (`api_tokens` table is ready).
+- **Agency Workspaces**: Build the specialized UI for agency owners to manage sub-client workspaces or white-label reporting domains.
+
+## 6. Global Cron / Scheduling
 - **Bypass RLS for Cron**: The current `getDueProjects` uses the standard Supabase client which is bound by RLS. For a true global Vercel cron to check all users' due projects simultaneously, implement a Supabase `service_role` query that fetches all due projects while bypassing RLS, or create an edge function to do this securely.

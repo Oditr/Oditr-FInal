@@ -26,15 +26,15 @@ function getServiceSupabase() {
   return createClient(supabaseUrl, supabaseServiceKey)
 }
 
-// Find user by Stripe customer ID
-async function findUserByCustomerId(customerId: string) {
+// Find workspace by Stripe customer ID
+async function findWorkspaceByCustomerId(customerId: string) {
   const sb = getServiceSupabase()
   if (!sb) return null
 
   // We still check profiles for backward compatibility or we check subscriptions
   let { data } = await sb
     .from('subscriptions')
-    .select('user_id')
+    .select('workspace_id')
     .eq('provider_customer_id', customerId)
     .single()
 
@@ -45,10 +45,10 @@ async function findUserByCustomerId(customerId: string) {
       .select('id')
       .eq('stripe_customer_id', customerId)
       .single()
-    if (profData) return profData.id
+    if (profData) return profData.default_workspace_id
   }
 
-  return data?.user_id || null
+  return data?.workspace_id || null
 }
 
 // Find user by email (fallback for first checkout)
@@ -58,7 +58,12 @@ async function findUserByEmail(email: string) {
 
   const { data } = await sb.auth.admin.listUsers()
   const user = data?.users?.find(u => u.email === email)
-  return user?.id || null
+  
+  if (user) {
+    const { data: profData } = await sb.from('profiles').select('default_workspace_id').eq('id', user.id).single()
+    return profData?.default_workspace_id || null
+  }
+  return null
 }
 
 export async function POST(req: NextRequest) {
@@ -103,22 +108,22 @@ export async function POST(req: NextRequest) {
         const customerId = session.customer as string
         const subscriptionId = session.subscription as string
         const email = session.customer_details?.email || session.customer_email
-        let userId = session.client_reference_id
+        let workspaceId = session.client_reference_id
 
-        if (!userId) {
-          userId = await findUserByCustomerId(customerId)
-          if (!userId && email) {
-            userId = await findUserByEmail(email)
+        if (!workspaceId) {
+          workspaceId = await findWorkspaceByCustomerId(customerId)
+          if (!workspaceId && email) {
+            workspaceId = await findUserByEmail(email) // findUserByEmail now returns workspaceId
           }
         }
 
         const planId = session.metadata?.planId as PlanId || 'pro'
 
-        if (userId && subscriptionId) {
+        if (workspaceId && subscriptionId) {
           // Fetch subscription details to get period start/end
           const subDetails = await stripe.subscriptions.retrieve(subscriptionId) as any
 
-          await upsertSubscription(userId, {
+          await upsertSubscription(workspaceId, {
             planId: planId,
             status: subDetails.status as any,
             provider: 'stripe',
@@ -128,7 +133,7 @@ export async function POST(req: NextRequest) {
             currentPeriodEnd: new Date(subDetails.current_period_end * 1000).toISOString(),
             cancelAtPeriodEnd: subDetails.cancel_at_period_end
           })
-          console.log(`[Webhook] User ${userId} upgraded to ${planId}`)
+          console.log(`[Webhook] Workspace ${workspaceId} upgraded to ${planId}`)
         }
         break
       }
@@ -136,10 +141,10 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as any
         const customerId = subscription.customer as string
-        const userId = await findUserByCustomerId(customerId)
+        const workspaceId = await findWorkspaceByCustomerId(customerId)
 
-        if (userId) {
-          await upsertSubscription(userId, {
+        if (workspaceId) {
+          await upsertSubscription(workspaceId, {
             status: subscription.status as any,
             currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
             currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
@@ -152,14 +157,14 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as any
         const customerId = subscription.customer as string
-        const userId = await findUserByCustomerId(customerId)
+        const workspaceId = await findWorkspaceByCustomerId(customerId)
 
-        if (userId) {
-          await upsertSubscription(userId, {
+        if (workspaceId) {
+          await upsertSubscription(workspaceId, {
             status: 'canceled',
             providerSubscriptionId: null, // Depending on if we want to keep it
           })
-          console.log(`[Webhook] User ${userId} subscription deleted`)
+          console.log(`[Webhook] Workspace ${workspaceId} subscription deleted`)
         }
         break
       }

@@ -3,8 +3,8 @@ import { getEffectivePlan } from './subscription-service'
 import { getUsageCount } from './usage-service'
 import { PLANS } from './config'
 
-export async function checkFeatureAccess(userId: string, featureKey: string): Promise<AccessCheckResult> {
-  const planId = await getEffectivePlan(userId)
+export async function checkFeatureAccess(workspaceId: string, featureKey: string): Promise<AccessCheckResult> {
+  const planId = await getEffectivePlan(workspaceId)
   const plan = PLANS[planId]
   
   if (!plan) {
@@ -34,8 +34,8 @@ export async function checkFeatureAccess(userId: string, featureKey: string): Pr
 /**
  * Checks if a user can consume a metered limit (e.g. audits, projects, rum_events).
  */
-export async function checkLimitAccess(userId: string, limitKey: 'monthlyAudits' | 'maxProjects' | 'monthlyRumEvents'): Promise<AccessCheckResult> {
-  const planId = await getEffectivePlan(userId)
+export async function checkLimitAccess(workspaceId: string, limitKey: 'monthlyAudits' | 'maxProjects' | 'monthlyRumEvents'): Promise<AccessCheckResult> {
+  const planId = await getEffectivePlan(workspaceId)
   const plan = PLANS[planId]
   
   if (!plan) {
@@ -59,15 +59,15 @@ export async function checkLimitAccess(userId: string, limitKey: 'monthlyAudits'
 
   let used = 0
   if (featureKey === 'projects.count') {
-    // Ideally query projects table: select count(*) where user_id = userId
+    // Ideally query projects table: select count(*) where workspace_id = workspaceId
     // To avoid circular dependencies, we'll fetch it via supabase here:
     const { supabase } = await import('@/lib/supabase')
     if (supabase) {
-      const { count } = await supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+      const { count } = await supabase.from('projects').select('*', { count: 'exact', head: true }).eq('workspace_id', workspaceId)
       used = count || 0
     }
   } else {
-    used = await getUsageCount(userId, featureKey)
+    used = await getUsageCount(workspaceId, featureKey)
   }
 
   if (used >= limit) {

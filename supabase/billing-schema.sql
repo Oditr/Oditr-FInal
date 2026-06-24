@@ -6,7 +6,8 @@
 -- ── Subscriptions ──
 create table if not exists public.subscriptions (
   id                       text primary key,
-  user_id                  uuid not null references auth.users(id) on delete cascade unique,
+  user_id                  uuid references auth.users(id) on delete cascade,
+  workspace_id             text references public.workspaces(id) on delete cascade unique,
   plan_id                  text not null default 'free',
   status                   text not null default 'active', -- active, trialing, past_due, canceled, unpaid
   provider                 text not null default 'stripe', -- stripe, manual
@@ -22,9 +23,9 @@ create table if not exists public.subscriptions (
 -- RLS
 alter table public.subscriptions enable row level security;
 
-create policy "Users can read own subscription"
+create policy "Users can read workspace subscription"
   on public.subscriptions for select
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id OR exists (select 1 from public.workspace_members wm where wm.workspace_id = subscriptions.workspace_id and wm.user_id = auth.uid()));
 
 -- Only service role can modify subscriptions
 
@@ -32,7 +33,8 @@ create policy "Users can read own subscription"
 -- Tracks monthly consumption of limits (e.g. audits, rum_events, projects)
 create table if not exists public.usage_records (
   id             text primary key,
-  user_id        uuid not null references auth.users(id) on delete cascade,
+  user_id        uuid references auth.users(id) on delete cascade,
+  workspace_id   text references public.workspaces(id) on delete cascade,
   feature_key    text not null, -- audit.runs, rum.events, projects.created
   quantity       integer not null default 1,
   billing_period text not null, -- e.g., '2026-06' or linked to subscription period
@@ -41,13 +43,14 @@ create table if not exists public.usage_records (
 );
 
 create index if not exists idx_usage_records_user_period on public.usage_records(user_id, feature_key, billing_period);
+create index if not exists idx_usage_records_workspace_period on public.usage_records(workspace_id, feature_key, billing_period);
 
 -- RLS
 alter table public.usage_records enable row level security;
 
-create policy "Users can read own usage records"
+create policy "Users can read workspace usage records"
   on public.usage_records for select
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id OR exists (select 1 from public.workspace_members wm where wm.workspace_id = usage_records.workspace_id and wm.user_id = auth.uid()));
 
 -- ── Billing Events (Webhook Idempotency) ──
 create table if not exists public.billing_events (
