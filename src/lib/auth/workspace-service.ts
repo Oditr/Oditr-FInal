@@ -24,7 +24,7 @@ export interface WorkspaceMember {
  * It checks cookies first, then falls back to the user's default_workspace_id.
  */
 export async function getActiveWorkspace(): Promise<{ workspace: Workspace | null, role: string | null }> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { workspace: null, role: null }
@@ -80,7 +80,7 @@ export async function getActiveWorkspace(): Promise<{ workspace: Workspace | nul
  * List all workspaces a user belongs to
  */
 export async function getUserWorkspaces(userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('workspace_members')
     .select('role, workspaces(*)')
@@ -97,7 +97,7 @@ export async function getUserWorkspaces(userId: string) {
  * Create a new workspace and make the user the owner
  */
 export async function createWorkspace(userId: string, name: string, type: string = 'startup') {
-  const supabase = createClient()
+  const supabase = await createClient()
   const workspaceId = `ws_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 1000)
 

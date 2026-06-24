@@ -15,7 +15,7 @@ export async function createApiToken(name: string, projectId?: string, scopes: s
   const token = `odi_${tokenBytes.toString('base64url')}`
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) throw new Error('Unauthenticated')
@@ -43,7 +43,7 @@ export async function revokeApiToken(tokenId: string) {
     throw new Error('Unauthorized to manage API tokens')
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from('api_tokens')
     .update({ revoked_at: new Date().toISOString() })
@@ -56,7 +56,7 @@ export async function revokeApiToken(tokenId: string) {
 
 export async function validateToken(rawToken: string, requiredScope?: string) {
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
-  const supabase = createClient() // Might need service key to bypass RLS if caller is unauthenticated
+  const supabase = await createClient() // Might need service key to bypass RLS if caller is unauthenticated
 
   const { data: tokenDoc, error } = await supabase
     .from('api_tokens')

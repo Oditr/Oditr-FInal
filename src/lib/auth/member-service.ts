@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import crypto from 'crypto'
 
 export async function inviteMember(workspaceId: string, email: string, role: string, inviterId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Check if they are already a member
   const { data: user } = await supabase.from('profiles').select('id, auth.users!inner(email)').eq('auth.users.email', email).maybeSingle()
@@ -38,7 +38,7 @@ export async function inviteMember(workspaceId: string, email: string, role: str
 }
 
 export async function removeMember(workspaceId: string, userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Cannot remove the owner if they are the only owner
   const { data: owners } = await supabase.from('workspace_members').select('id').eq('workspace_id', workspaceId).eq('role', 'owner')
@@ -55,7 +55,7 @@ export async function removeMember(workspaceId: string, userId: string) {
 }
 
 export async function getWorkspaceMembers(workspaceId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('workspace_members')
     .select(`

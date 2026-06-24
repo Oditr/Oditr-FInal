@@ -42,7 +42,7 @@ async function findWorkspaceByCustomerId(customerId: string) {
     // Check old profiles table
     const { data: profData } = await sb
       .from('profiles')
-      .select('id')
+      .select('default_workspace_id')
       .eq('stripe_customer_id', customerId)
       .single()
     if (profData) return profData.default_workspace_id

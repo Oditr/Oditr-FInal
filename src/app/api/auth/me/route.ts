@@ -3,7 +3,7 @@ import { getActiveWorkspace } from '@/lib/auth/workspace-service'
 import { createClient } from '@/utils/supabase/server'
 
 export async function GET() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
