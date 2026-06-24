@@ -3,7 +3,7 @@
 // Includes caching, rate limiting, and structured error handling
 
 import { NextRequest, NextResponse } from 'next/server'
-import { runCustomAudit, calculateHealthScore } from '@/lib/audit-engine'
+import { runCustomAudit, calculateHealthScore, calculateUnifiedScores, normalizeIssues } from '@/lib/audit-engine'
 import { cacheKey, getCached, setCache } from '@/lib/audit-engine/cache'
 import { fetchPSI, getPoolStatus } from '@/lib/psi-pool'
 import { trackAuditEvent, updateDailyCounters } from '@/lib/analytics'
@@ -505,12 +505,8 @@ export async function GET(req: NextRequest) {
       console.warn('[audit API] Custom audit unavailable, returning PSI only:', customError)
     }
 
-    // Calculate combined health score (handle partial results gracefully)
-    const psiPerf = lighthouseResult?.scores?.performance ?? 0
-    const customScore = customAuditResult?.overallScore ?? 0
-    const healthScore = lighthouseResult && customAuditResult
-      ? calculateHealthScore(psiPerf, customScore)
-      : lighthouseResult ? psiPerf : customScore
+    const normalizedIssues = normalizeIssues(parsedUrl.href, lighthouseResult, customAuditResult)
+    const { healthScore, categoryScores } = calculateUnifiedScores(normalizedIssues, lighthouseResult)
 
     const response = {
       ...(lighthouseResult || { url: parsedUrl.href, strategy, fetchedAt: new Date().toISOString(), scores: null, cwv: null, fieldData: null, opportunities: [], diagnostics: [] }),
@@ -519,6 +515,8 @@ export async function GET(req: NextRequest) {
       fromCache: false,
       partial: !lighthouseResult || !customAuditResult,
       partialReason: !lighthouseResult ? (psiError || 'PSI unavailable') : !customAuditResult ? (customError || 'Custom audit unavailable') : undefined,
+      categoryScores,
+      issues: normalizedIssues,
       // ── Audit context: connection + location metadata ──
       auditContext: {
         connection: { id: connProfile.id, label: connProfile.label, throughputMbps: connProfile.throughputMbps, expectedRttMs: connProfile.expectedRttMs },

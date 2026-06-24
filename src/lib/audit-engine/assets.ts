@@ -67,7 +67,7 @@ export async function checkAssets(fetched: FetchResult, $: CheerioAPI): Promise<
       id: 'too-many-render-blocking',
       title: `${renderBlocking.length} render-blocking resources`,
       description: `Too many resources block initial render. Add async/defer to scripts and use media queries on stylesheets.`,
-      severity: renderBlocking.length > 6 ? 'critical' : 'moderate',
+      severity: renderBlocking.length > 6 ? 'critical' : 'medium',
       category: 'assets',
       value: String(renderBlocking.length),
     })
@@ -83,7 +83,7 @@ export async function checkAssets(fetched: FetchResult, $: CheerioAPI): Promise<
         id: `render-blocking-js-${failed}`,
         title: 'Render-blocking script',
         description: `Script blocks rendering. Add async or defer attribute.`,
-        severity: 'moderate',
+        severity: 'medium',
         category: 'assets',
         element: a.element,
       })
@@ -115,7 +115,7 @@ export async function checkAssets(fetched: FetchResult, $: CheerioAPI): Promise<
           id: `large-${asset.type}-${failed}`,
           title: `Large ${asset.type.toUpperCase()} file: ${(size / 1024).toFixed(0)} KB`,
           description: `${asset.type === 'css' ? 'Stylesheet' : 'Script'} exceeds ${(limit / 1024).toFixed(0)} KB. Consider splitting or tree-shaking.`,
-          severity: size > limit * 3 ? 'critical' : 'moderate',
+          severity: size > limit * 3 ? 'critical' : 'medium',
           category: 'assets',
           value: `${(size / 1024).toFixed(0)} KB`,
           element: asset.element,
@@ -131,7 +131,7 @@ export async function checkAssets(fetched: FetchResult, $: CheerioAPI): Promise<
           id: `no-compression-${failed}`,
           title: `${asset.type.toUpperCase()} not compressed`,
           description: `Enable gzip or Brotli compression on the server for ${asset.type.toUpperCase()} files`,
-          severity: 'moderate',
+          severity: 'medium',
           category: 'assets',
           element: asset.element,
         })
@@ -148,7 +148,7 @@ export async function checkAssets(fetched: FetchResult, $: CheerioAPI): Promise<
       id: 'too-many-assets',
       title: `${assets.length} external assets loaded`,
       description: `High number of external CSS/JS files. Consider bundling.`,
-      severity: assets.length > 40 ? 'critical' : 'minor',
+      severity: assets.length > 40 ? 'critical' : 'low',
       category: 'assets',
       value: String(assets.length),
     })

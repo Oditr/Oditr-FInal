@@ -47,7 +47,7 @@ export async function checkImages(fetched: FetchResult, $: CheerioAPI): Promise<
         id: `img-no-alt-${failed}`,
         title: 'Image missing alt attribute',
         description: `Image lacks alt attribute entirely. Use alt="" for decorative images or descriptive text for meaningful ones.`,
-        severity: 'moderate',
+        severity: 'medium',
         category: 'images',
         element: `<img src="${img.src.slice(0, 80)}">`,
       })
@@ -64,7 +64,7 @@ export async function checkImages(fetched: FetchResult, $: CheerioAPI): Promise<
         id: `img-no-lazy-${failed}`,
         title: 'Image not lazy loaded',
         description: `Below-the-fold image should use loading="lazy"`,
-        severity: 'minor',
+        severity: 'low',
         category: 'images',
         element: `<img src="${images[i].src.slice(0, 80)}">`,
       })
@@ -81,7 +81,7 @@ export async function checkImages(fetched: FetchResult, $: CheerioAPI): Promise<
         id: `img-no-dims-${failed}`,
         title: 'Image missing explicit dimensions',
         description: `Set width and height attributes to prevent layout shifts (CLS)`,
-        severity: 'moderate',
+        severity: 'medium',
         category: 'images',
         element: `<img src="${img.src.slice(0, 80)}">`,
       })
@@ -115,7 +115,7 @@ export async function checkImages(fetched: FetchResult, $: CheerioAPI): Promise<
           id: `img-large-${failed}`,
           title: `Large image: ${(size / 1024).toFixed(0)} KB`,
           description: `Image exceeds 500 KB. Consider compressing or using modern formats.`,
-          severity: size > 1_000_000 ? 'critical' : 'moderate',
+          severity: size > 1_000_000 ? 'critical' : 'medium',
           category: 'images',
           value: `${(size / 1024).toFixed(0)} KB`,
           element: `<img src="${img.src.slice(0, 80)}">`,
@@ -132,7 +132,7 @@ export async function checkImages(fetched: FetchResult, $: CheerioAPI): Promise<
           id: `img-format-${failed}`,
           title: `Non-modern image format: .${ext}`,
           description: `Consider converting to WebP or AVIF for better compression`,
-          severity: 'minor',
+          severity: 'low',
           category: 'images',
           element: `<img src="${img.src.slice(0, 80)}">`,
         })

@@ -57,7 +57,7 @@ export async function checkBrokenLinks(fetched: FetchResult, $: CheerioAPI): Pro
             id: `broken-link-${i + j + 1}`,
             title: `Broken link: ${res.status || 'timeout'}`,
             description: `"${link.text}" → ${link.href}`,
-            severity: isAuthReject ? 'info' : res.status >= 500 ? 'critical' : res.status === 404 ? 'moderate' : 'minor',
+            severity: isAuthReject ? 'info' : res.status >= 500 ? 'critical' : res.status === 404 ? 'medium' : 'low',
             category: 'broken-links',
             value: String(res.status || 'timeout'),
             element: `<a href="${link.href}">${link.text}</a>`,
@@ -73,7 +73,7 @@ export async function checkBrokenLinks(fetched: FetchResult, $: CheerioAPI): Pro
           id: `broken-link-${failed}`,
           title: 'Link check failed (timeout)',
           description: `Could not reach: ${link.href}`,
-          severity: 'minor',
+          severity: 'low',
           category: 'broken-links',
           value: 'timeout',
         })

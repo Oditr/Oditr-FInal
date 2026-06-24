@@ -5,13 +5,13 @@ import * as cheerio from 'cheerio'
 import { AuditFinding, CategoryResult, FetchResult } from './types'
 import type { CheerioAPI } from './index'
 
-const SECURITY_HEADERS: { header: string; label: string; severity: 'critical' | 'moderate' | 'minor' }[] = [
+const SECURITY_HEADERS: { header: string; label: string; severity: 'critical' | 'medium' | 'low' }[] = [
   { header: 'strict-transport-security',  label: 'Strict-Transport-Security (HSTS)', severity: 'critical' },
-  { header: 'content-security-policy',    label: 'Content-Security-Policy (CSP)',     severity: 'moderate' },
-  { header: 'x-content-type-options',     label: 'X-Content-Type-Options',            severity: 'moderate' },
-  { header: 'x-frame-options',            label: 'X-Frame-Options',                   severity: 'moderate' },
-  { header: 'referrer-policy',            label: 'Referrer-Policy',                   severity: 'minor' },
-  { header: 'permissions-policy',         label: 'Permissions-Policy',                severity: 'minor' },
+  { header: 'content-security-policy',    label: 'Content-Security-Policy (CSP)',     severity: 'medium' },
+  { header: 'x-content-type-options',     label: 'X-Content-Type-Options',            severity: 'medium' },
+  { header: 'x-frame-options',            label: 'X-Frame-Options',                   severity: 'medium' },
+  { header: 'referrer-policy',            label: 'Referrer-Policy',                   severity: 'low' },
+  { header: 'permissions-policy',         label: 'Permissions-Policy',                severity: 'low' },
 ]
 
 export async function checkSecurity(fetched: FetchResult, $: CheerioAPI): Promise<CategoryResult> {
@@ -54,7 +54,7 @@ export async function checkSecurity(fetched: FetchResult, $: CheerioAPI): Promis
           id: 'xcto-not-nosniff',
           title: 'X-Content-Type-Options should be "nosniff"',
           description: `Current value: "${val}". Set to "nosniff" to prevent MIME sniffing.`,
-          severity: 'minor',
+          severity: 'low',
           category: 'security',
           value: val,
         })
@@ -98,7 +98,7 @@ export async function checkSecurity(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'server-version-exposed',
       title: 'Server version exposed',
       description: `Server header reveals version info: "${server}". Remove version numbers to reduce attack surface.`,
-      severity: 'minor',
+      severity: 'low',
       category: 'security',
       value: server,
     })
@@ -112,7 +112,7 @@ export async function checkSecurity(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'x-powered-by-exposed',
       title: 'X-Powered-By header exposed',
       description: `Remove the X-Powered-By header ("${poweredBy}") to hide server technology`,
-      severity: 'minor',
+      severity: 'low',
       category: 'security',
       value: poweredBy,
     })

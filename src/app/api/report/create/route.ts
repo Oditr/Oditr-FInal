@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { url, strategy, healthScore, scores, cwvSummary, topIssues, customAudit } = body
+  const { url, strategy, healthScore, scores, cwvSummary, topIssues, customAudit, categoryScores, issues } = body
 
   if (!url) {
     return NextResponse.json({ error: 'URL is required' }, { status: 400 })
@@ -67,9 +67,11 @@ export async function POST(req: NextRequest) {
           overallScore: customAudit.overallScore,
           totalFindings: customAudit.totalFindings,
           critical: customAudit.critical,
-          moderate: customAudit.moderate,
-          minor: customAudit.minor,
+          medium: customAudit.medium,
+          low: customAudit.low,
         } : null,
+        categoryScores: categoryScores || null,
+        issues: issues || null,
       })
     } catch (e) {
       console.error('[report] Create failed:', (e as Error).message)

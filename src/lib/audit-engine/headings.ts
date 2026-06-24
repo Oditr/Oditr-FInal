@@ -36,7 +36,7 @@ export async function checkHeadings(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'multiple-h1',
       title: `Multiple H1 headings (${h1Count})`,
       description: 'Only one H1 should exist per page. Use H2-H6 for sub-sections.',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'headings',
       value: String(h1Count),
     })
@@ -53,7 +53,7 @@ export async function checkHeadings(fetched: FetchResult, $: CheerioAPI): Promis
         id: `skipped-level-h${prevLevel}-h${h.level}`,
         title: `Skipped heading level: H${prevLevel} → H${h.level}`,
         description: `Heading levels should not skip. After H${prevLevel}, the next heading should be H${prevLevel} or H${prevLevel + 1}.`,
-        severity: 'moderate',
+        severity: 'medium',
         category: 'headings',
         value: `H${prevLevel} → H${h.level}`,
         element: `<h${h.level}>${h.text}</h${h.level}>`,
@@ -71,7 +71,7 @@ export async function checkHeadings(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'h1-not-first',
       title: `First heading is H${headings[0].level}, not H1`,
       description: 'The first heading on the page should be an H1 element',
-      severity: 'minor',
+      severity: 'low',
       category: 'headings',
       element: `<h${headings[0].level}>${headings[0].text}</h${headings[0].level}>`,
     })
@@ -89,7 +89,7 @@ export async function checkHeadings(fetched: FetchResult, $: CheerioAPI): Promis
         id: `empty-heading-${emptyCount}`,
         title: `Empty H${h.level} heading`,
         description: 'Headings should contain descriptive text for SEO and accessibility',
-        severity: 'moderate',
+        severity: 'medium',
         category: 'headings',
         element: `<h${h.level}></h${h.level}>`,
       })

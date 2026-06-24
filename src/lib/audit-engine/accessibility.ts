@@ -39,7 +39,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'img-no-alt-a11y',
       title: `${imgNoAlt} image(s) missing alt attribute`,
       description: 'All images must have alt attributes. Use alt="" for decorative images.',
-      severity: imgNoAlt > 5 ? 'critical' : 'moderate',
+      severity: imgNoAlt > 5 ? 'critical' : 'medium',
       category: 'accessibility',
       value: String(imgNoAlt),
     })
@@ -70,7 +70,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'unlabeled-inputs',
       title: `${unlabeledInputs} form input(s) without labels`,
       description: 'Form inputs need associated <label> elements or aria-label attributes',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'accessibility',
       value: String(unlabeledInputs),
     })
@@ -96,7 +96,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'empty-buttons',
       title: `${emptyButtons} button(s) without accessible name`,
       description: 'Buttons must have text content, aria-label, or title attribute',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'accessibility',
       value: String(emptyButtons),
     })
@@ -116,7 +116,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'no-main-landmark',
       title: 'Missing <main> landmark',
       description: 'Use a <main> element to identify the primary content area',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'accessibility',
     })
   } else {
@@ -129,7 +129,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'no-nav-landmark',
       title: 'Missing <nav> landmark',
       description: 'Use <nav> elements to identify navigation regions',
-      severity: 'minor',
+      severity: 'low',
       category: 'accessibility',
     })
   } else {
@@ -141,7 +141,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'no-header-landmark',
       title: 'Missing <header> landmark',
       description: 'Use a <header> element for the page banner/header area',
-      severity: 'minor',
+      severity: 'low',
       category: 'accessibility',
     })
     failed++
@@ -157,7 +157,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'no-skip-link',
       title: 'Missing skip navigation link',
       description: 'Add a "Skip to content" link for keyboard users to bypass navigation',
-      severity: 'minor',
+      severity: 'low',
       category: 'accessibility',
     })
   } else {
@@ -180,7 +180,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'generic-link-text',
       title: `${genericLinks} links with generic text`,
       description: 'Links like "click here" or "read more" are not descriptive for screen readers. Use meaningful link text.',
-      severity: 'minor',
+      severity: 'low',
       category: 'accessibility',
       value: String(genericLinks),
     })
@@ -200,7 +200,7 @@ export async function checkAccessibility(fetched: FetchResult, $: CheerioAPI): P
       id: 'positive-tabindex',
       title: `${badTabindex} element(s) with tabindex > 0`,
       description: 'Positive tabindex values can create confusing tab order. Use tabindex="0" or tabindex="-1" instead.',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'accessibility',
       value: String(badTabindex),
     })

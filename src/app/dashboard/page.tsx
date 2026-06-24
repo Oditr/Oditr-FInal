@@ -596,6 +596,8 @@ export default function DashboardPage() {
                           cwvSummary: result.cwv,
                           topIssues: result.opportunities?.slice(0, 5),
                           customAudit: result.customAudit,
+                          categoryScores: result.categoryScores,
+                          issues: result.issues,
                         }),
                       })
                       const data = await res.json()

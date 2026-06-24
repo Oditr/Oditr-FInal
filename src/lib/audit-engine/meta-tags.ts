@@ -27,7 +27,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'title-too-short',
       title: `Title too short (${title.length} chars)`,
       description: `Title should be 30–60 characters. Current: "${title}"`,
-      severity: 'moderate',
+      severity: 'medium',
       category: 'meta-tags',
       value: `${title.length} chars`,
     })
@@ -37,7 +37,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'title-too-long',
       title: `Title too long (${title.length} chars)`,
       description: `Title may be truncated in search results. Keep under 60 characters.`,
-      severity: 'minor',
+      severity: 'low',
       category: 'meta-tags',
       value: `${title.length} chars`,
     })
@@ -62,7 +62,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'meta-desc-short',
       title: `Meta description short (${desc.length} chars)`,
       description: `Ideal length is 120–160 characters for full display in search results`,
-      severity: 'minor',
+      severity: 'low',
       category: 'meta-tags',
       value: `${desc.length} chars`,
     })
@@ -72,7 +72,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'meta-desc-long',
       title: `Meta description long (${desc.length} chars)`,
       description: `Will be truncated in search results. Keep under 160 characters.`,
-      severity: 'minor',
+      severity: 'low',
       category: 'meta-tags',
       value: `${desc.length} chars`,
     })
@@ -90,7 +90,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
         id: `missing-${tag}`,
         title: `Missing ${tag}`,
         description: `Open Graph tag "${tag}" is missing. Important for social sharing.`,
-        severity: tag === 'og:title' || tag === 'og:image' ? 'moderate' : 'minor',
+        severity: tag === 'og:title' || tag === 'og:image' ? 'medium' : 'low',
         category: 'meta-tags',
       })
     } else {
@@ -106,7 +106,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'missing-twitter-card',
       title: 'Missing twitter:card meta tag',
       description: 'Add twitter:card for rich Twitter/X sharing previews',
-      severity: 'minor',
+      severity: 'low',
       category: 'meta-tags',
     })
   } else {
@@ -121,7 +121,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'missing-canonical',
       title: 'Missing canonical URL',
       description: 'Add <link rel="canonical"> to prevent duplicate content issues',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'meta-tags',
     })
   } else {
@@ -136,7 +136,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'missing-favicon',
       title: 'Missing favicon',
       description: 'Add a favicon for browser tabs and bookmarks',
-      severity: 'minor',
+      severity: 'low',
       category: 'meta-tags',
     })
   } else {
@@ -151,7 +151,7 @@ export async function checkMetaTags(fetched: FetchResult, $: CheerioAPI): Promis
       id: 'missing-charset',
       title: 'Missing charset declaration',
       description: 'Add <meta charset="utf-8"> to prevent encoding issues',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'meta-tags',
     })
   } else {
