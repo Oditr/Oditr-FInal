@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
 export async function POST(req: Request) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
   }
 
   // Set the active workspace cookie
-  cookies().set('active_workspace_id', workspaceId, {
+  const cookieStore = await cookies()
+  cookieStore.set('active_workspace_id', workspaceId, {
     path: '/',
     maxAge: 60 * 60 * 24 * 30, // 30 days
     httpOnly: true,
