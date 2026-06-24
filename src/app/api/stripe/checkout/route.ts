@@ -1,68 +1,51 @@
-// ── Stripe Checkout Session API ──
-// Creates a Stripe Checkout Session and returns the URL for redirect.
-
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { STRIPE_PRICES } from '@/lib/plans'
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-
-function getStripe(): Stripe | null {
-  if (!stripeSecretKey) return null
-  return new Stripe(stripeSecretKey, { apiVersion: '2026-05-27.dahlia' })
-}
+import { getBillingProvider } from '@/lib/billing/provider'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { PlanId } from '@/lib/billing/types'
 
 export async function POST(req: NextRequest) {
   try {
-    const stripe = getStripe()
-    if (!stripe) {
-      return NextResponse.json(
-        { error: 'Stripe is not configured. Add STRIPE_SECRET_KEY to .env.local' },
-        { status: 503 }
-      )
+    const { planId, billingCycle } = await req.json()
+    
+    if (!planId) {
+      return NextResponse.json({ error: 'Missing planId' }, { status: 400 })
     }
 
-    const body = await req.json()
-    const { priceId, billingCycle, successUrl, cancelUrl } = body
-
-    // Determine price ID
-    let stripePriceId = priceId
-    if (!stripePriceId) {
-      stripePriceId = billingCycle === 'yearly'
-        ? STRIPE_PRICES.pro_yearly
-        : STRIPE_PRICES.pro_monthly
+    // Identify user
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) { return cookieStore.get(name)?.value },
+          set(name: string, value: string, options: any) {},
+          remove(name: string, options: any) {}
+        }
+      }
+    )
+    
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!stripePriceId) {
-      return NextResponse.json(
-        { error: 'No Stripe price ID configured. Set STRIPE_PRO_MONTHLY_PRICE_ID in .env.local' },
-        { status: 400 }
-      )
-    }
+    const provider = getBillingProvider()
+    const successUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings/billing?success=true`
+    const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing?canceled=true`
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: stripePriceId,
-          quantity: 1,
-        },
-      ],
-      success_url: successUrl || `${req.nextUrl.origin}/dashboard?upgraded=true`,
-      cancel_url: cancelUrl || `${req.nextUrl.origin}/pricing`,
-      metadata: {
-        source: 'vitalfix_pricing_page',
-      },
+    const checkoutUrl = await provider.createCheckoutSession({
+      userId: session.user.id,
+      planId: planId as PlanId,
+      cycle: billingCycle === 'yearly' ? 'yearly' : 'monthly',
+      successUrl,
+      cancelUrl
     })
 
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ url: checkoutUrl })
   } catch (err: any) {
     console.error('[Stripe Checkout] Error:', err.message)
-    return NextResponse.json(
-      { error: err.message || 'Failed to create checkout session' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }
