@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
         if (userId && subscriptionId) {
           // Fetch subscription details to get period start/end
-          const subDetails = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
+          const subDetails = await stripe.subscriptions.retrieve(subscriptionId) as any
 
           await upsertSubscription(userId, {
             planId: planId,
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
+        const subscription = event.data.object as any
         const customerId = subscription.customer as string
         const userId = await findUserByCustomerId(customerId)
 
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
+        const subscription = event.data.object as any
         const customerId = subscription.customer as string
         const userId = await findUserByCustomerId(customerId)
 
