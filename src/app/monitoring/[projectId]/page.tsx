@@ -25,6 +25,7 @@ export default function ProjectMonitoringDetail() {
 
   useEffect(() => {
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
 
   const fetchData = async () => {
@@ -169,6 +170,15 @@ export default function ProjectMonitoringDetail() {
               <div className="flex justify-between">
                 <dt className="text-gray-500">Added</dt>
                 <dd className="font-medium text-gray-900">{new Date(project.createdAt).toLocaleDateString()}</dd>
+              </div>
+              <div className="flex justify-between pt-3 border-t border-gray-100 mt-2">
+                <dt className="text-gray-500">Field Data</dt>
+                <dd>
+                  <Link href={`/monitoring/${projectId}/rum`} className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center">
+                    View RUM Dashboard
+                    <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </Link>
+                </dd>
               </div>
             </dl>
           </div>
