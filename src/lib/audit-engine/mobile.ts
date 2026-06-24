@@ -43,7 +43,7 @@ export async function checkMobile(fetched: FetchResult, $: CheerioAPI): Promise<
         id: 'viewport-no-initial-scale',
         title: 'Viewport missing initial-scale',
         description: 'Add initial-scale=1 to prevent unexpected zooming behavior',
-        severity: 'minor',
+        severity: 'low',
         category: 'mobile',
         value: viewport,
       })
@@ -58,7 +58,7 @@ export async function checkMobile(fetched: FetchResult, $: CheerioAPI): Promise<
         id: 'viewport-zoom-disabled',
         title: 'Zooming is disabled',
         description: 'user-scalable=no or maximum-scale=1 prevents users from zooming. This is an accessibility concern.',
-        severity: 'moderate',
+        severity: 'medium',
         category: 'mobile',
         value: viewport,
       })
@@ -88,7 +88,7 @@ export async function checkMobile(fetched: FetchResult, $: CheerioAPI): Promise<
       id: 'fixed-width-elements',
       title: 'Fixed-width elements detected',
       description: 'Elements with large fixed pixel widths may cause horizontal scrolling on mobile',
-      severity: 'moderate',
+      severity: 'medium',
       category: 'mobile',
     })
   } else {
@@ -110,7 +110,7 @@ export async function checkMobile(fetched: FetchResult, $: CheerioAPI): Promise<
       id: 'non-responsive-tables',
       title: `${tables - responsiveTables} table(s) may not be responsive`,
       description: 'Wrap tables in a container with overflow-x: auto for mobile scrolling',
-      severity: 'minor',
+      severity: 'low',
       category: 'mobile',
       value: String(tables - responsiveTables),
     })
@@ -135,7 +135,7 @@ export async function checkMobile(fetched: FetchResult, $: CheerioAPI): Promise<
       id: 'small-touch-targets',
       title: `${smallTargets} potentially small touch target(s)`,
       description: 'Interactive elements should be at least 44×44 CSS pixels for mobile usability',
-      severity: 'minor',
+      severity: 'low',
       category: 'mobile',
       value: String(smallTargets),
     })
@@ -160,7 +160,7 @@ export async function checkMobile(fetched: FetchResult, $: CheerioAPI): Promise<
       id: 'small-text',
       title: `${tinyText} elements with small text (<12px)`,
       description: 'Text smaller than 12px is hard to read on mobile devices',
-      severity: 'minor',
+      severity: 'low',
       category: 'mobile',
       value: String(tinyText),
     })

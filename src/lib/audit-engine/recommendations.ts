@@ -7,8 +7,8 @@ import { AuditFinding, Recommendation, CategoryResult } from './types'
 // ── Severity → impact weight for uplift calculation ──
 const SEVERITY_IMPACT: Record<string, number> = {
   critical: 3.0,
-  moderate: 2.0,
-  minor: 1.0,
+  medium: 2.0,
+  low: 1.0,
   info: 0,
 }
 

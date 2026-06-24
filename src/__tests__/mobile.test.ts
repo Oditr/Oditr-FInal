@@ -30,7 +30,7 @@ describe('checkMobile — viewport meta tag', () => {
     const result = await checkMobile(makeFetched(html), cheerio.load(html))
     const finding = result.findings.find(f => f.id === 'viewport-zoom-disabled')
     expect(finding).toBeDefined()
-    expect(finding!.severity).toBe('moderate')
+    expect(finding!.severity).toBe('medium')
   })
 })
 

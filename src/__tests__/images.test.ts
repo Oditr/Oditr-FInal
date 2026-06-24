@@ -15,7 +15,7 @@ describe('checkImages — alt text', () => {
     const result = await checkImages(makeFetched(html), cheerio.load(html))
     const altFinding = result.findings.find(f => f.id?.includes('img-no-alt'))
     expect(altFinding).toBeDefined()
-    expect(altFinding!.severity).toBe('moderate')
+    expect(altFinding!.severity).toBe('medium')
   })
 
   it('accepts alt="" for decorative images', async () => {

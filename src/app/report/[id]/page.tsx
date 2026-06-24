@@ -1,11 +1,9 @@
-// ── Public Shareable Report Page ──
-// /report/[id] — read-only audit summary designed for social sharing.
-
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Zap, ShieldCheck, AlertTriangle, BarChart3, ExternalLink } from 'lucide-react'
+import { ArrowRight, Zap, ShieldCheck, AlertTriangle, BarChart3, ExternalLink, Code, Info, CheckCircle2 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import ScoreRing from '@/components/ScoreRing'
+import { AuditIssue, CategoryScore, UnifiedCategory } from '@/lib/audit-engine/types'
 
 // ── Types ──
 interface ReportData {
@@ -16,7 +14,9 @@ interface ReportData {
   scores: { performance: number; accessibility: number; bestPractices: number; seo: number } | null
   cwv_summary: any
   top_issues: Array<{ title: string; impact: string; displayValue: string }> | null
-  custom_audit: { overallScore: number; totalFindings: number; critical: number; moderate: number; minor: number } | null
+  custom_audit: { overallScore: number; totalFindings: number; critical: number; moderate?: number; medium?: number; minor?: number; low?: number } | null
+  categoryScores?: Record<UnifiedCategory, CategoryScore>
+  issues?: AuditIssue[]
   view_count: number
   created_at: string
 }
@@ -47,11 +47,19 @@ async function getReport(id: string): Promise<ReportData | null> {
   return data as ReportData
 }
 
-// ── Score color helper ──
+// ── Helpers ──
 function scoreColor(score: number): string {
   if (score >= 90) return '#34d399'
   if (score >= 50) return '#fbbf24'
   return '#f87171'
+}
+
+function severityColor(sev: string): string {
+  if (sev === 'critical') return '#f87171'
+  if (sev === 'high') return '#fb923c'
+  if (sev === 'medium') return '#fbbf24'
+  if (sev === 'low') return '#60a5fa'
+  return '#9ca3af'
 }
 
 // ── Dynamic OG metadata ──
@@ -60,7 +68,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const report = await getReport(id)
 
   if (!report) {
-    return { title: 'Report Not Found — VitalFix' }
+    return { title: 'Report Not Found — Øditr' }
   }
 
   const domain = new URL(report.url).hostname
@@ -68,23 +76,18 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const emoji = score >= 90 ? '🟢' : score >= 50 ? '🟡' : '🔴'
 
   return {
-    title: `${domain} scored ${score}/100 — VitalFix Audit`,
-    description: `Core Web Vitals audit for ${domain}. Performance: ${report.scores?.performance ?? 'N/A'}, Health Score: ${score}/100. Run your own free audit on VitalFix.`,
+    title: `${domain} scored ${score}/100 — Øditr Audit Engine`,
+    description: `Core Audit Intelligence Report for ${domain}. Health Score: ${score}/100. Run your own free audit on Øditr.`,
     openGraph: {
-      title: `${emoji} ${domain} — ${score}/100 Web Vitals Score`,
-      description: `See the full Core Web Vitals breakdown for ${domain}. Performance: ${report.scores?.performance ?? 'N/A'}/100. Run your own audit free.`,
+      title: `${emoji} ${domain} — ${score}/100 Audit Score`,
+      description: `See the full technical intelligence breakdown for ${domain}.`,
       type: 'website',
-      url: `https://vitalfix.dev/report/${id}`,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${emoji} ${domain} — ${score}/100 on VitalFix`,
-      description: `Core Web Vitals audit results. Run your own free audit.`,
+      url: `https://vitalfix.dev/report/${id}`, // Update to oditr when domain ready
     },
   }
 }
 
-// ── Page Component ──
+// ── Component ──
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const report = await getReport(id)
@@ -107,7 +110,31 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   const domain = new URL(report.url).hostname
   const healthScore = report.health_score ?? 0
-  const perfScore = report.scores?.performance ?? 0
+
+  // Fallbacks for older reports without new categoryScores
+  const catScores = report.categoryScores || {
+    performance: { score: report.scores?.performance ?? 0, label: 'Performance' },
+    seo: { score: report.scores?.seo ?? 0, label: 'SEO' },
+    accessibility: { score: report.scores?.accessibility ?? 0, label: 'Accessibility' },
+    security: { score: report.custom_audit?.overallScore ?? 0, label: 'Security' }, // Guess
+    ai_readiness: { score: 0, label: 'AI Readiness' },
+    mobile: { score: 100, label: 'Mobile' },
+    images: { score: 100, label: 'Images' },
+    broken_links: { score: 100, label: 'Broken Links' }
+  } as any
+
+  const issues: AuditIssue[] = report.issues || []
+
+  // Group issues by category for display
+  const issuesByCategory: Record<string, AuditIssue[]> = {}
+  for (const issue of issues) {
+    if (!issuesByCategory[issue.category]) issuesByCategory[issue.category] = []
+    issuesByCategory[issue.category].push(issue)
+  }
+
+  const formatCatName = (cat: string) => {
+    return cat.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
+  }
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -119,7 +146,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       }}>
         <div className="container-pad" style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <span className="badge badge-accent">Shared Report</span>
+            <span className="badge badge-accent">Øditr Intelligence Report</span>
             <span style={{
               fontSize: '0.68rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: 4,
               background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)',
@@ -148,10 +175,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
       </section>
 
-      <div className="container-pad" style={{ padding: '2.5rem 1.5rem', maxWidth: 720, margin: '0 auto' }}>
-        {/* ── Health Score Hero ── */}
+      <div className="container-pad" style={{ padding: '2.5rem 1.5rem', maxWidth: 900, margin: '0 auto' }}>
+        
+        {/* ── Overall Scorecard ── */}
         <div className="glass-card" style={{
-          padding: '2rem', marginBottom: '1.5rem', textAlign: 'center',
+          padding: '2rem', marginBottom: '2rem', textAlign: 'center',
           background: 'linear-gradient(135deg, rgba(52,211,153,0.06), rgba(129,140,248,0.06))',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
@@ -161,42 +189,29 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
             <ScoreRing score={healthScore} size={140} color={scoreColor(healthScore)} label="Health" />
           </div>
-          {report.scores && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              <span>Performance: <strong style={{ color: scoreColor(report.scores.performance) }}>{report.scores.performance}</strong></span>
-              {report.custom_audit && (
-                <span>Site Audit: <strong style={{ color: scoreColor(report.custom_audit.overallScore) }}>{report.custom_audit.overallScore}</strong></span>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* ── Lighthouse Scores ── */}
-        {report.scores && (
-          <div className="glass-card" style={{ padding: '1.75rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-              <Zap size={16} color="#818cf8" />
-              <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Lighthouse Scores</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-              {[
-                { label: 'Performance', val: report.scores.performance },
-                { label: 'Accessibility', val: report.scores.accessibility },
-                { label: 'Best Practices', val: report.scores.bestPractices },
-                { label: 'SEO', val: report.scores.seo },
-              ].map(s => (
-                <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-                  <ScoreRing score={s.val} size={64} color={scoreColor(s.val)} label="" />
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{s.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* ── Category Score Grid ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+          {Object.values(catScores).map((cat: any) => {
+            if (!cat || typeof cat.score !== 'number') return null;
+            return (
+              <div key={cat.category || cat.label} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' }}>
+                <ScoreRing score={cat.score} size={64} color={scoreColor(cat.score)} label="" />
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  {cat.category ? formatCatName(cat.category) : cat.label}
+                </span>
+                {cat.summary && (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{cat.summary}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
-        {/* ── CWV Metrics ── */}
+        {/* ── Core Web Vitals ── */}
         {report.cwv_summary && (
-          <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <BarChart3 size={16} color="#60a5fa" />
               <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Core Web Vitals</span>
@@ -226,64 +241,104 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           </div>
         )}
 
-        {/* ── Top Issues ── */}
-        {report.top_issues && report.top_issues.length > 0 && (
-          <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <AlertTriangle size={16} color="#fbbf24" />
-              <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Top Issues Found</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {report.top_issues.slice(0, 5).map((issue, i) => (
-                <div key={i} style={{
-                  padding: '0.75rem 1rem', borderRadius: 10,
-                  background: 'var(--bg)', border: '1px solid var(--border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
-                    {issue.title}
+        {/* ── Issues by Category ── */}
+        {Object.keys(issuesByCategory).length > 0 ? (
+          <div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+              Intelligence Findings
+            </h2>
+            
+            {Object.entries(issuesByCategory).map(([category, catIssues]) => (
+              <div key={category} style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {formatCatName(category)}
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.1rem 0.5rem', borderRadius: 12, background: 'var(--bg-secondary)' }}>
+                    {catIssues.length}
                   </span>
-                  {issue.impact && (
-                    <span style={{
-                      fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                      padding: '0.1rem 0.4rem', borderRadius: 4,
-                      background: issue.impact === 'high' ? 'rgba(248,113,113,0.1)' : issue.impact === 'medium' ? 'rgba(251,191,36,0.1)' : 'rgba(96,165,250,0.1)',
-                      color: issue.impact === 'high' ? '#f87171' : issue.impact === 'medium' ? '#fbbf24' : '#60a5fa',
-                    }}>
-                      {issue.impact}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                </h3>
 
-        {/* ── Findings Summary ── */}
-        {report.custom_audit && report.custom_audit.totalFindings > 0 && (
-          <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              {report.custom_audit.critical > 0 && (
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 6, background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
-                  {report.custom_audit.critical} Critical
-                </span>
-              )}
-              {report.custom_audit.moderate > 0 && (
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 6, background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>
-                  {report.custom_audit.moderate} Moderate
-                </span>
-              )}
-              {report.custom_audit.minor > 0 && (
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: 6, background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
-                  {report.custom_audit.minor} Minor
-                </span>
-              )}
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {catIssues.map((issue) => (
+                    <div key={issue.id} className="glass-card" style={{ padding: '1.25rem', borderLeft: `4px solid ${severityColor(issue.severity)}` }}>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>{issue.title}</h4>
+                        <span style={{ 
+                          fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', padding: '0.15rem 0.5rem', borderRadius: 4,
+                          background: `${severityColor(issue.severity)}20`, color: severityColor(issue.severity)
+                        }}>
+                          {issue.severity}
+                        </span>
+                      </div>
+                      
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
+                        {issue.description}
+                      </p>
+
+                      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        {issue.impact && (
+                          <div style={{ flex: '1 1 200px', fontSize: '0.8rem', padding: '0.75rem', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                              <Info size={14} /> Why this matters
+                            </div>
+                            <span style={{ color: 'var(--text-secondary)' }}>{issue.impact}</span>
+                          </div>
+                        )}
+                        {issue.recommendation && (
+                          <div style={{ flex: '1 1 200px', fontSize: '0.8rem', padding: '0.75rem', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                              <CheckCircle2 size={14} /> Recommendation
+                            </div>
+                            <span style={{ color: 'var(--text-secondary)' }}>{issue.recommendation}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {issue.fixSnippet && (
+                        <div style={{ marginTop: '0.75rem', background: '#1e1e2e', borderRadius: 8, overflow: 'hidden' }}>
+                          <div style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#a6accd', fontWeight: 600 }}>
+                            <Code size={14} /> Developer Fix Snippet
+                          </div>
+                          <pre style={{ margin: 0, padding: '1rem', fontSize: '0.8rem', color: '#cdd6f4', overflowX: 'auto', fontFamily: "'JetBrains Mono', monospace" }}>
+                            <code>{issue.fixSnippet}</code>
+                          </pre>
+                        </div>
+                      )}
+
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
+        ) : (
+          /* Fallback for old reports without the new 'issues' array */
+          report.top_issues && report.top_issues.length > 0 && (
+            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <AlertTriangle size={16} color="#fbbf24" />
+                <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Legacy Findings</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                {report.top_issues.map((issue, i) => (
+                  <div key={i} style={{
+                    padding: '0.75rem 1rem', borderRadius: 10,
+                    background: 'var(--bg)', border: '1px solid var(--border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      {issue.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
         )}
 
         {/* ── CTA — Run Your Own Audit ── */}
         <div style={{
+          marginTop: '3rem',
           borderRadius: 20, padding: '2.5rem',
           background: 'linear-gradient(135deg, rgba(129,140,248,0.08) 0%, rgba(96,165,250,0.04) 50%, rgba(52,211,153,0.03) 100%)',
           border: '1px solid rgba(129,140,248,0.15)',
@@ -299,32 +354,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <Link href="/dashboard" className="btn-primary" style={{ textDecoration: 'none', padding: '0.75rem 2rem', fontSize: '0.9rem' }}>
               Run Free Audit <ArrowRight size={16} />
             </Link>
-            <Link href="/library" className="btn-secondary" style={{ textDecoration: 'none', padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}>
-              Browse Fix Library
-            </Link>
           </div>
         </div>
       </div>
-
-      {/* ── JSON-LD ── */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebApplication',
-            name: 'VitalFix',
-            url: 'https://vitalfix.dev',
-            applicationCategory: 'DeveloperApplication',
-            description: 'Core Web Vitals audit and optimization platform for developers.',
-            offers: {
-              '@type': 'Offer',
-              price: '0',
-              priceCurrency: 'USD',
-            },
-          }),
-        }}
-      />
     </div>
   )
 }

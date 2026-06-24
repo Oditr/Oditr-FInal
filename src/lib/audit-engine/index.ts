@@ -15,6 +15,7 @@ import { checkHeadings } from './headings'
 import { checkSecurity } from './security'
 import { checkMobile } from './mobile'
 import { checkAccessibility } from './accessibility'
+import { checkAiReadiness } from './ai-readiness'
 
 const MODULE_TIMEOUT = 15_000 // 15 seconds per module (broken-links needs HTTP HEAD requests)
 
@@ -30,6 +31,7 @@ const modules: AuditModule[] = [
   checkSecurity,
   checkMobile,
   checkAccessibility,
+  checkAiReadiness,
 ]
 
 /**
@@ -80,5 +82,6 @@ export async function runCustomAudit(url: string): Promise<CustomAuditResult> {
 }
 
 // Re-export types for convenience
-export type { CustomAuditResult, CategoryResult, AuditFinding } from './types'
-export { calculateHealthScore } from './scorer'
+export type { CustomAuditResult, CategoryResult, AuditFinding, AuditIssue, UnifiedAuditResult } from './types'
+export { calculateHealthScore, calculateUnifiedScores } from './scorer'
+export { normalizeIssues } from './issue-normalizer'

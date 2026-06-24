@@ -2,7 +2,7 @@
 
 export type CwvMetric = { value: string; score: number; numericValue?: number }
 export type FieldDataMetric = { p75: number; category: string } | null
-export type Severity = 'critical' | 'moderate' | 'minor' | 'info'
+export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info'
 
 export type Recommendation = {
   fix: string
@@ -81,5 +81,8 @@ export type AuditResult = {
   partial?: boolean
   partialReason?: string
   liteMode?: boolean
+  categoryScores?: any
+  issues?: any[]
+  aiReadiness?: any
 }
 

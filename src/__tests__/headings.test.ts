@@ -46,7 +46,7 @@ describe('checkHeadings — missing H1', () => {
 
 // ──────────────────────────────────────────────
 describe('checkHeadings — multiple H1s', () => {
-  it('flags multiple H1s as moderate', async () => {
+  it('flags multiple H1s as medium', async () => {
     const html = `
       <html><body>
         <h1>First H1</h1>
@@ -57,7 +57,7 @@ describe('checkHeadings — multiple H1s', () => {
 
     const multi = result.findings.find(f => f.id === 'multiple-h1')
     expect(multi).toBeDefined()
-    expect(multi!.severity).toBe('moderate')
+    expect(multi!.severity).toBe('medium')
     expect(multi!.value).toBe('2')
   })
 })
@@ -75,7 +75,7 @@ describe('checkHeadings — skipped levels', () => {
 
     const skip = result.findings.find(f => f.id?.startsWith('skipped-level'))
     expect(skip).toBeDefined()
-    expect(skip!.severity).toBe('moderate')
+    expect(skip!.severity).toBe('medium')
   })
 })
 
@@ -92,7 +92,7 @@ describe('checkHeadings — empty headings', () => {
 
     const empty = result.findings.find(f => f.id?.startsWith('empty-heading'))
     expect(empty).toBeDefined()
-    expect(empty!.severity).toBe('moderate')
+    expect(empty!.severity).toBe('medium')
   })
 })
 

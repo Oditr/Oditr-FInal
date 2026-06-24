@@ -9,7 +9,7 @@ import { checkHeadings } from '@/lib/audit-engine/headings'
 import { checkSecurity } from '@/lib/audit-engine/security'
 import { checkMobile } from '@/lib/audit-engine/mobile'
 import { checkAccessibility } from '@/lib/audit-engine/accessibility'
-import { calculateOverallScore, calculateHealthScore, countBySeverity } from '@/lib/audit-engine/scorer'
+import { buildCustomAuditResult, calculateHealthScore, countBySeverity } from '@/lib/audit-engine/scorer'
 
 // ── Realistic test page ──
 const REALISTIC_HTML = `
@@ -132,7 +132,8 @@ describe('Integration: Multi-module audit on a well-formed page', () => {
       checkAccessibility(fetched, $),
     ])
 
-    const overallScore = calculateOverallScore(categories)
+    const customResult = buildCustomAuditResult('https://example.com', categories, 1000)
+    const overallScore = customResult.overallScore
     expect(overallScore).toBeGreaterThanOrEqual(70)
     expect(overallScore).toBeLessThanOrEqual(100)
 
@@ -142,7 +143,7 @@ describe('Integration: Multi-module audit on a well-formed page', () => {
 
     const severity = countBySeverity(categories)
     expect(severity.critical).toBeGreaterThanOrEqual(0)
-    expect(severity.moderate).toBeGreaterThanOrEqual(0)
+    expect(severity.medium).toBeGreaterThanOrEqual(0)
   })
 })
 
@@ -171,7 +172,8 @@ describe('Integration: Broken page scores low', () => {
     expect(a11y.score).toBeLessThanOrEqual(50)
 
     const categories = [meta, headings, security, mobile, a11y]
-    const overall = calculateOverallScore(categories)
+    const customResult = buildCustomAuditResult('https://example.com', categories, 1000)
+    const overall = customResult.overallScore
     expect(overall).toBeLessThan(40)
 
     const { critical } = countBySeverity(categories)

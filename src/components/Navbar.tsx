@@ -15,6 +15,7 @@ const links = [
   { href: '/guides', label: 'Guides' },
   { href: '/docs', label: 'Docs' },
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/monitoring', label: 'Monitoring' },
   { href: '/pricing', label: 'Pricing' },
 ]
 

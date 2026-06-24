@@ -3,17 +3,18 @@
 
 import { describe, it, expect } from 'vitest'
 import {
-  calculateOverallScore,
   calculateHealthScore,
   countBySeverity,
+  buildCustomAuditResult,
+  calculateUnifiedScores
 } from '@/lib/audit-engine/scorer'
-import type { CategoryResult } from '@/lib/audit-engine/types'
+import type { CategoryResult, AuditIssue } from '@/lib/audit-engine/types'
 
 // ── Helper: build a minimal CategoryResult ──
 function makeCat(
   category: string,
   score: number,
-  findings: { severity: 'critical' | 'moderate' | 'minor' }[] = []
+  findings: { severity: 'critical' | 'high' | 'medium' | 'low' }[] = []
 ): CategoryResult {
   return {
     category: category as any,
@@ -32,50 +33,51 @@ function makeCat(
 }
 
 // ──────────────────────────────────────────────
-// calculateOverallScore
+// calculateUnifiedScores
 // ──────────────────────────────────────────────
 
-describe('calculateOverallScore', () => {
-  it('returns 0 for empty categories', () => {
-    expect(calculateOverallScore([])).toBe(0)
-  })
-
-  it('returns exact score for a single category', () => {
-    const cats = [makeCat('images', 75)]
-    expect(calculateOverallScore(cats)).toBe(75)
-  })
-
-  it('applies category weights correctly', () => {
-    // security has weight 1.2, headings has weight 0.6
-    const cats = [
-      makeCat('security', 100),  // 100 * 1.2 = 120
-      makeCat('headings', 0),    //   0 * 0.6 = 0
+describe('calculateUnifiedScores', () => {
+  it('deducts correctly based on severity', () => {
+    const issues: AuditIssue[] = [
+      {
+        id: '1', title: 'Issue 1', description: '', category: 'security',
+        severity: 'critical', affectedUrl: '', evidence: {}, impact: '',
+        recommendation: '', fixDifficulty: 'unknown', revenueRelevant: false, createdAt: ''
+      },
+      {
+        id: '2', title: 'Issue 2', description: '', category: 'security',
+        severity: 'high', affectedUrl: '', evidence: {}, impact: '',
+        recommendation: '', fixDifficulty: 'unknown', revenueRelevant: false, createdAt: ''
+      }
     ]
-    // weighted avg = 120 / 1.8 = 66.67 → rounds to 67
-    expect(calculateOverallScore(cats)).toBe(67)
+    const { categoryScores } = calculateUnifiedScores(issues, { scores: { performance: 100 } })
+    // Security starts at 100. Critical (-25) + High (-15) = -40 => 60
+    expect(categoryScores.security.score).toBe(60)
   })
+})
 
-  it('returns 100 when all categories score 100', () => {
+// ──────────────────────────────────────────────
+// buildCustomAuditResult
+// ──────────────────────────────────────────────
+
+describe('buildCustomAuditResult', () => {
+  it('builds a custom audit result correctly', () => {
     const cats = [
-      makeCat('broken-links', 100),
-      makeCat('images', 100),
-      makeCat('meta-tags', 100),
-      makeCat('security', 100),
+      makeCat('security', 50, [
+        { severity: 'critical' },
+        { severity: 'high' },
+      ]),
+      makeCat('images', 70, [
+        { severity: 'medium' },
+        { severity: 'low' },
+      ]),
     ]
-    expect(calculateOverallScore(cats)).toBe(100)
-  })
-
-  it('returns 0 when all categories score 0', () => {
-    const cats = [
-      makeCat('broken-links', 0),
-      makeCat('images', 0),
-    ]
-    expect(calculateOverallScore(cats)).toBe(0)
-  })
-
-  it('uses default weight 1.0 for unknown categories', () => {
-    const cats = [makeCat('unknown-category', 80)]
-    expect(calculateOverallScore(cats)).toBe(80)
+    const result = buildCustomAuditResult('https://example.com', cats, 1000)
+    expect(result.totalFindings).toBe(4)
+    expect(result.critical).toBe(1)
+    expect(result.high).toBe(1)
+    expect(result.medium).toBe(1)
+    expect(result.low).toBe(1)
   })
 })
 
@@ -112,7 +114,7 @@ describe('calculateHealthScore', () => {
 
 describe('countBySeverity', () => {
   it('returns zeros for no findings', () => {
-    expect(countBySeverity([])).toEqual({ critical: 0, moderate: 0, minor: 0 })
+    expect(countBySeverity([])).toEqual({ critical: 0, high: 0, medium: 0, low: 0 })
   })
 
   it('counts findings across multiple categories', () => {
@@ -122,11 +124,11 @@ describe('countBySeverity', () => {
         { severity: 'critical' },
       ]),
       makeCat('images', 70, [
-        { severity: 'moderate' },
-        { severity: 'minor' },
+        { severity: 'high' },
+        { severity: 'low' },
       ]),
     ]
-    expect(countBySeverity(cats)).toEqual({ critical: 2, moderate: 1, minor: 1 })
+    expect(countBySeverity(cats)).toEqual({ critical: 2, high: 1, medium: 0, low: 1 })
   })
 
   it('ignores info-level findings in the count', () => {
@@ -144,6 +146,6 @@ describe('countBySeverity', () => {
         category: 'meta-tags',
       }],
     }
-    expect(countBySeverity([cat])).toEqual({ critical: 0, moderate: 0, minor: 0 })
+    expect(countBySeverity([cat])).toEqual({ critical: 0, high: 0, medium: 0, low: 0 })
   })
 })

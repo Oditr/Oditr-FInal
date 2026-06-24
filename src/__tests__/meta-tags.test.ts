@@ -99,7 +99,7 @@ describe('checkMetaTags — edge cases', () => {
 
     const finding = result.findings.find(f => f.id === 'title-too-short')
     expect(finding).toBeDefined()
-    expect(finding!.severity).toBe('moderate')
+    expect(finding!.severity).toBe('medium')
   })
 
   it('flags title longer than 60 chars', async () => {
@@ -110,7 +110,7 @@ describe('checkMetaTags — edge cases', () => {
 
     const finding = result.findings.find(f => f.id === 'title-too-long')
     expect(finding).toBeDefined()
-    expect(finding!.severity).toBe('minor')
+    expect(finding!.severity).toBe('low')
   })
 
   it('flags meta description shorter than 120 chars', async () => {
