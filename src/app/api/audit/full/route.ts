@@ -7,7 +7,8 @@ import { runCustomAudit, calculateHealthScore, calculateUnifiedScores, normalize
 import { cacheKey, getCached, setCache } from '@/lib/audit-engine/cache'
 import { fetchPSI, getPoolStatus } from '@/lib/psi-pool'
 import { trackAuditEvent, updateDailyCounters } from '@/lib/analytics'
-import { checkQuota, incrementAuditCount } from '@/lib/plans'
+import { checkLimitAccess } from '@/lib/billing/access-service'
+import { incrementUsage } from '@/lib/billing/usage-service'
 import { createServerClient } from '@supabase/ssr'
 import {
   getConnectionProfile, getLocationProfile,
@@ -358,19 +359,16 @@ export async function GET(req: NextRequest) {
   // Check quota for authenticated users
   if (userId) {
     try {
-      const quota = await checkQuota(userId)
+      const quota = await checkLimitAccess(userId, 'monthlyAudits')
       if (!quota.allowed) {
-        const upgradeMsg = quota.plan === 'free'
-          ? 'Upgrade to Starter ($5/mo) for 25 audits/day.'
-          : 'Upgrade to Pro ($19/mo) for unlimited audits.'
         return NextResponse.json(
           {
-            error: `Daily audit limit reached (${quota.used}/${quota.limit}). ${upgradeMsg}`,
-            hint: 'Visit /pricing to upgrade your plan.',
+            error: quota.upgradeMessage || 'Audit limit reached.',
+            hint: 'Visit /dashboard/settings/billing to upgrade your plan.',
             quotaExceeded: true,
-            used: quota.used,
-            limit: quota.limit,
-            plan: quota.plan,
+            used: quota.usage?.used,
+            limit: quota.usage?.limit,
+            plan: quota.currentPlan,
           },
           { status: 429 }
         )
@@ -559,9 +557,9 @@ export async function GET(req: NextRequest) {
       avg_latency_ms: latencyMs,
     }).catch(() => { })
 
-    // ── Increment daily audit counter for plan enforcement ──
+    // ── Increment monthly audit counter for plan enforcement ──
     if (userId) {
-      incrementAuditCount(userId).catch(() => { })
+      incrementUsage(userId, 'audit.runs').catch(() => { })
     }
 
     return NextResponse.json(response)

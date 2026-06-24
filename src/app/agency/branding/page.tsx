@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import type { AgencyBranding } from '@/lib/agency/types'
+import { FeatureGate } from '@/components/billing/FeatureGate'
 
 export default function AgencyBrandingSettings() {
   const [branding, setBranding] = useState<Partial<AgencyBranding>>({})
@@ -59,7 +60,8 @@ export default function AgencyBrandingSettings() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <FeatureGate featureKey="agency.white_label">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">White-Label Branding</h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -218,5 +220,6 @@ export default function AgencyBrandingSettings() {
         </div>
       </form>
     </div>
+    </FeatureGate>
   )
 }
