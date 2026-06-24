@@ -16,6 +16,7 @@ export type ProjectStatus = 'active' | 'paused' | 'error'
 export interface MonitoredProject {
   id: string
   userId: string | null
+  clientId?: string
   name: string
   url: string
   normalizedDomain: string

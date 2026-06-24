@@ -9,7 +9,8 @@ import { ScoreTrendChart } from '@/components/monitoring/ScoreTrendChart'
 import { RegressionSummaryCard } from '@/components/monitoring/RegressionSummaryCard'
 import { VitalsTrendPanel } from '@/components/monitoring/VitalsTrendPanel'
 import { IssueChangesPanel } from '@/components/monitoring/IssueChangesPanel'
-import { ChevronLeftIcon, RefreshCwIcon, SettingsIcon } from 'lucide-react'
+import { ChevronLeftIcon, RefreshCwIcon, SettingsIcon, FileTextIcon } from 'lucide-react'
+import { ReportBuilderModal } from '@/components/agency/ReportBuilderModal'
 
 export default function ProjectMonitoringDetail() {
   const params = useParams()
@@ -22,6 +23,7 @@ export default function ProjectMonitoringDetail() {
   const [isLoading, setIsLoading] = useState(true)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showReportBuilder, setShowReportBuilder] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -131,14 +133,31 @@ export default function ProjectMonitoringDetail() {
             <button
               onClick={handleManualScan}
               disabled={isScanning}
-              className="text-sm text-white px-4 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 flex items-center"
+              className="text-sm text-white px-4 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 flex items-center shadow-sm"
             >
               <RefreshCwIcon className={`w-4 h-4 mr-1.5 ${isScanning ? 'animate-spin' : ''}`} />
               {isScanning ? 'Scanning...' : 'Run Scan Now'}
             </button>
+            {project.lastReportId && (
+              <button
+                onClick={() => setShowReportBuilder(true)}
+                className="text-sm text-gray-700 px-4 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 flex items-center shadow-sm ml-2"
+              >
+                <FileTextIcon className="w-4 h-4 mr-1.5 text-gray-500" />
+                Generate Client Report
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {showReportBuilder && project.lastReportId && (
+        <ReportBuilderModal
+          projectId={project.id}
+          auditReportId={project.lastReportId}
+          onClose={() => setShowReportBuilder(false)}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (Charts & Stats) */}
