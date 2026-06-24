@@ -29,7 +29,7 @@ export async function getActiveWorkspace(): Promise<{ workspace: Workspace | nul
 
   if (!user) return { workspace: null, role: null }
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   let activeWorkspaceId = cookieStore.get('active_workspace_id')?.value
 
   if (!activeWorkspaceId) {

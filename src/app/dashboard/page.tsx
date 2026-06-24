@@ -22,6 +22,9 @@ import { useFlag } from '@/hooks/useFeatureFlag'
 import LeadCaptureModal from '@/components/LeadCaptureModal'
 import AuthModal from '@/components/AuthModal'
 import AuditReminder from '@/components/AuditReminder'
+import ActivationChecklist, { ChecklistItem } from '@/components/onboarding/ActivationChecklist'
+import NextBestActionCard from '@/components/onboarding/NextBestActionCard'
+import type { ActionRecommendation } from '@/lib/onboarding/recommendation-service'
 import {
   executeAuditRequest, classifyError, getStageForElapsed, debounce,
   type AuditStageInfo, type AuditError, type ErrorCategory,
@@ -71,6 +74,9 @@ export default function DashboardPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [shareLoading, setShareLoading] = useState(false)
   const [shareSuccess, setShareSuccess] = useState(false)
+  const [activationScore, setActivationScore] = useState(0)
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+  const [recommendations, setRecommendations] = useState<ActionRecommendation[]>([])
   const { user, plan, quotaUsed, quotaLimit, quotaRemaining } = useAuth()
   useSyncLocalData()
   const { trackPageView, trackFeature } = useAnalytics()
@@ -103,8 +109,31 @@ export default function DashboardPage() {
           }
         }
       } catch { /* localStorage unavailable or corrupted — ignore */ }
+
+      // Fetch Onboarding State
+      if (user) {
+        try {
+          const res = await fetch('/api/onboarding/state')
+          if (res.ok) {
+            const data = await res.json()
+            setActivationScore(data.state.activation_score || 0)
+            
+            const completed = data.state.completed_steps || []
+            const newChecklist = [
+              { id: 'project', label: 'Add first project', href: '/onboarding', isComplete: completed.includes('project_setup') },
+              { id: 'audit', label: 'Run first audit', href: '/', isComplete: completed.includes('first_audit') },
+              { id: 'business', label: 'Add business inputs', href: '/onboarding', isComplete: completed.includes('business_profile') || data.state.skipped_steps?.includes('business_profile') },
+              { id: 'monitoring', label: 'Enable monitoring', href: '/monitoring', isComplete: false },
+            ]
+            setChecklist(newChecklist)
+            setRecommendations(data.recommendations || [])
+          }
+        } catch (e) {
+          console.error('Failed to load onboarding state', e)
+        }
+      }
     })()
-  }, [user?.id])
+  }, [user])
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -312,6 +341,24 @@ export default function DashboardPage() {
       </section>
 
       <div className="container-pad" style={{ padding: '2.5rem 1.5rem' }}>
+        
+        {/* Onboarding Checklist and Actions (Only when not loading and no result shown) */}
+        {!result && !loading && (checklist.length > 0 || recommendations.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="md:col-span-1">
+              <ActivationChecklist score={activationScore} items={checklist} />
+            </div>
+            <div className="md:col-span-2">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Recommended for You</h3>
+              <div className="space-y-4">
+                {recommendations.map((rec) => (
+                  <NextBestActionCard key={rec.id} action={rec} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Input panel ── */}
         <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderColor: loading ? 'rgba(129,140,248,0.25)' : 'var(--border)', transition: 'border-color 200ms' }}>
           {/* URL + Run */}
