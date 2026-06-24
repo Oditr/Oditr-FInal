@@ -79,7 +79,7 @@ export default function ChecklistPage() {
 
   const exportResults = () => {
     const lines: string[] = [
-      '=== VitalFix Performance Audit Report ===',
+      '=== Oditr Performance Audit Report ===',
       `Generated: ${new Date().toLocaleString()}`,
       `Score: ${pct}% (${done}/${total} completed)`,
       '',

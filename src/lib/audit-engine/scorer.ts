@@ -38,16 +38,7 @@ export function calculateOverallScore(categories: CategoryResult[]): number {
   return Math.round(weightedSum / totalWeight)
 }
 
-/**
- * Calculate the combined Health Score from Lighthouse + custom audit.
- * Lighthouse weight: 60%, Custom audit weight: 40%
- */
-export function calculateHealthScore(
-  lighthousePerformance: number,
-  customAuditScore: number
-): number {
-  return Math.round(lighthousePerformance * 0.6 + customAuditScore * 0.4)
-}
+
 
 /**
  * Count findings by severity.

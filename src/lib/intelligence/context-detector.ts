@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Context Detector ──
+// ── Oditr Intelligence Engine — Context Detector ──
 // Identifies website category (ecommerce, SaaS, blog, etc.) from URL, HTML, and meta signals.
 // Category determines which metrics are prioritized in recommendations.
 

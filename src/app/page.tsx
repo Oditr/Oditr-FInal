@@ -70,7 +70,7 @@ const steps = [
 
 const testimonials = [
   {
-    quote: 'VitalFix cut our LCP from 4.1s to 1.8s in a single afternoon. The code snippets are battle-tested and just work.',
+    quote: 'Øditr cut our LCP from 4.1s to 1.8s in a single afternoon. The code snippets are battle-tested and just work.',
     name: 'Alex M.',
     role: 'Frontend Engineer',
     initials: 'AM',

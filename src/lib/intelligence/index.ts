@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Orchestrator ──
+// ── Oditr Intelligence Engine — Orchestrator ──
 // Public API that ties together all intelligence modules.
 // Takes raw audit data and produces a complete IntelligenceReport.
 
@@ -8,7 +8,9 @@ import { detectSiteContext } from './context-detector'
 import { generateMetricNarratives, generateBusinessSummary } from './business-impact-engine'
 import { prioritizeIssues } from './prioritization-engine'
 import { assessTrust } from './trust-system'
+import { computeOditrHealthScore } from './scoring'
 import { createLogger } from './logger'
+export { detectRegressions, type RegressionReport, type RegressionDetail } from './regression-engine'
 
 const log = createLogger('intelligence')
 
@@ -47,17 +49,17 @@ export function buildIntelligenceReport(input: IntelligenceInput): IntelligenceR
       siteContext.category,
     )
 
+    // ── Step 4: Proprietary Scoring ──
+    const oditrScore = computeOditrHealthScore(input)
+
     const businessSummary = generateBusinessSummary(
       metricNarratives,
       psiData?.scores?.performance ?? null,
       customAudit?.overallScore ?? null,
-      // Calculate health score if both available
-      psiData?.scores?.performance != null && customAudit?.overallScore != null
-        ? Math.round(psiData.scores.performance * 0.6 + customAudit.overallScore * 0.4)
-        : psiData?.scores?.performance ?? customAudit?.overallScore ?? null,
+      oditrScore.overallScore
     )
 
-    // ── Step 4: Prioritize All Issues ──
+    // ── Step 5: Prioritize All Issues ──
     // Collect custom audit findings
     const customFindings = customAudit?.categories
       ? customAudit.categories.flatMap((cat: any) =>
@@ -90,7 +92,7 @@ export function buildIntelligenceReport(input: IntelligenceInput): IntelligenceR
     const optional = allPrioritized
       .filter(i => i.priorityTier === 'optional')
 
-    // ── Step 5: Trust Assessment ──
+    // ── Step 6: Trust Assessment ──
     const trust = assessTrust({
       hasPsiData: !!psiData,
       hasCustomAudit: !!customAudit,
@@ -122,6 +124,7 @@ export function buildIntelligenceReport(input: IntelligenceInput): IntelligenceR
       optional,
       totalIssues: allPrioritized.length,
       businessSummary,
+      oditrScore,
       detectedFramework,
       siteContext,
       trust,
@@ -154,6 +157,16 @@ function buildFallbackReport(url: string): IntelligenceReport {
       summary: 'The intelligence engine encountered an issue. Raw audit data is still available below.',
       metricNarratives: [],
       overallUxRating: 'needs-work',
+    },
+    oditrScore: {
+      overallScore: 0,
+      breakdown: {
+        speed: { score: 0, weight: 0.4 },
+        stability: { score: 0, weight: 0.15 },
+        interactivity: { score: 0, weight: 0.15 },
+        reliability: { score: 0, weight: 0.1 },
+        readiness: { score: 0, weight: 0.2 },
+      }
     },
     detectedFramework: {
       framework: 'unknown',

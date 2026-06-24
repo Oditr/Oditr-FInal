@@ -4,11 +4,11 @@ import { ArrowRight, BookOpen, Clock, Zap } from 'lucide-react'
 import { guides, categoryColors, categoryLabels } from '@/data/guides'
 
 export const metadata: Metadata = {
-  title: 'Web Vitals Guides — Fix LCP, INP, CLS, TTFB | VitalFix',
+  title: 'Web Vitals Guides — Fix LCP, INP, CLS, TTFB | Øditr',
   description: 'Free, in-depth guides to fix Core Web Vitals issues. Learn how to optimize LCP, INP, CLS, and TTFB with production-ready code examples and best practices.',
   keywords: 'Core Web Vitals guide, fix LCP, fix CLS, fix INP, reduce TTFB, Lighthouse score, web performance',
   openGraph: {
-    title: 'Web Vitals Guides — VitalFix',
+    title: 'Web Vitals Guides — Øditr',
     description: 'In-depth guides to fix Core Web Vitals with code examples. Free.',
     type: 'website',
   },

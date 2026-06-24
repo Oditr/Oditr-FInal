@@ -30,6 +30,7 @@ export interface StoredScan {
   minor: number
   fieldOverallCategory: string | null
   partial: boolean
+  intelligenceSnapshot?: any | null
 }
 
 // ── Helpers ──
@@ -86,6 +87,10 @@ function toStoredScan(result: AuditResult): StoredScan {
     minor: result.customAudit?.minor ?? 0,
     fieldOverallCategory: result.fieldData?.overallCategory ?? null,
     partial: result.partial ?? false,
+    intelligenceSnapshot: result.intelligence ? {
+      fixFirst: result.intelligence.fixFirst.slice(0, 5),
+      fixNext: result.intelligence.fixNext.slice(0, 5)
+    } : null,
   }
 }
 

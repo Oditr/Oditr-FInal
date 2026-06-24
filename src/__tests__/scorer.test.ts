@@ -1,10 +1,9 @@
 // ── Scorer Unit Tests ──
-// Tests the scoring engine — the mathematical core of VitalFix
+// Tests the scoring engine — the mathematical core of Oditr
 
 import { describe, it, expect } from 'vitest'
 import {
   calculateOverallScore,
-  calculateHealthScore,
   countBySeverity,
 } from '@/lib/audit-engine/scorer'
 import type { CategoryResult } from '@/lib/audit-engine/types'
@@ -79,32 +78,6 @@ describe('calculateOverallScore', () => {
   })
 })
 
-// ──────────────────────────────────────────────
-// calculateHealthScore
-// ──────────────────────────────────────────────
-
-describe('calculateHealthScore', () => {
-  it('blends Lighthouse (60%) + custom audit (40%)', () => {
-    // 100 * 0.6 + 100 * 0.4 = 100
-    expect(calculateHealthScore(100, 100)).toBe(100)
-  })
-
-  it('returns 0 when both inputs are 0', () => {
-    expect(calculateHealthScore(0, 0)).toBe(0)
-  })
-
-  it('weights Lighthouse more heavily', () => {
-    // 100 * 0.6 + 0 * 0.4 = 60
-    expect(calculateHealthScore(100, 0)).toBe(60)
-    // 0 * 0.6 + 100 * 0.4 = 40
-    expect(calculateHealthScore(0, 100)).toBe(40)
-  })
-
-  it('rounds the result', () => {
-    // 33 * 0.6 + 77 * 0.4 = 19.8 + 30.8 = 50.6 → 51
-    expect(calculateHealthScore(33, 77)).toBe(51)
-  })
-})
 
 // ──────────────────────────────────────────────
 // countBySeverity

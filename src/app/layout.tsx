@@ -21,11 +21,11 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'VitalFix — Core Web Vitals for Developers',
+  title: 'Øditr — Core Web Vitals for Developers',
   description: 'Production-ready code snippets, interactive audit checklists, and developer tools to fix LCP, INP, and CLS. Ship faster websites today.',
   keywords: 'Core Web Vitals, LCP, INP, CLS, performance, web optimization, developer tools',
   openGraph: {
-    title: 'VitalFix — Fix Your Core Web Vitals',
+    title: 'Øditr — Fix Your Core Web Vitals',
     description: 'Free code snippets, audit checklists, and interactive tools for developers.',
     type: 'website',
   },

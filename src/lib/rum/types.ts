@@ -1,4 +1,4 @@
-// ── VitalFix RUM — Type Definitions ──
+// ── Oditr RUM — Type Definitions ──
 // Shared types for the Real User Monitoring system:
 //   vf.js (client script) → /api/rum/collect (ingest) → aggregator (analysis)
 

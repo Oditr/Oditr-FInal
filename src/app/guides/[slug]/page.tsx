@@ -13,10 +13,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const guide = getGuideBySlug(slug)
-  if (!guide) return { title: 'Guide Not Found — VitalFix' }
+  if (!guide) return { title: 'Guide Not Found — Øditr' }
 
   return {
-    title: `${guide.title} | VitalFix`,
+    title: `${guide.title} | Øditr`,
     description: guide.description,
     keywords: `${categoryLabels[guide.category]}, Core Web Vitals, ${guide.title.toLowerCase()}, web performance`,
     openGraph: {

@@ -20,6 +20,7 @@ create table if not exists public.scans (
   minor                  integer default 0,
   field_overall_category text,
   partial                boolean default false,
+  intelligence_snapshot  jsonb,           -- { prioritizedIssues, bundleMetrics }
   created_at             timestamptz default now()
 );
 

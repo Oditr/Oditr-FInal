@@ -31,9 +31,9 @@ const PERFECT_HTML = `
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VitalFix — Website Health Analyzer (45 chars)</title>
-  <meta name="description" content="VitalFix analyzes your website performance, security, accessibility, and SEO. Get actionable recommendations to improve your site health score instantly.">
-  <meta property="og:title" content="VitalFix">
+  <title>Øditr — Website Health Analyzer (45 chars)</title>
+  <meta name="description" content="Øditr analyzes your website performance, security, accessibility, and SEO. Get actionable recommendations to improve your site health score instantly.">
+  <meta property="og:title" content="Øditr">
   <meta property="og:description" content="Website health analysis">
   <meta property="og:image" content="https://vitalfix.dev/og.png">
   <meta property="og:url" content="https://vitalfix.dev">

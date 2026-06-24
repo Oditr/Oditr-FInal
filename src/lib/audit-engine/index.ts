@@ -1,5 +1,5 @@
 // ── Audit Engine Orchestrator ──
-// Runs all 8 audit modules in parallel with per-module timeouts
+// Runs all 11 audit modules in parallel with per-module timeouts
 // HTML is parsed ONCE with cheerio and shared across all modules
 
 import * as cheerio from 'cheerio'
@@ -15,6 +15,9 @@ import { checkHeadings } from './headings'
 import { checkSecurity } from './security'
 import { checkMobile } from './mobile'
 import { checkAccessibility } from './accessibility'
+import { checkAiReadiness } from './ai-agent-readiness'
+import { checkSitemap } from './sitemap'
+import { checkStructuredData } from './structured-data'
 
 const MODULE_TIMEOUT = 15_000 // 15 seconds per module (broken-links needs HTTP HEAD requests)
 
@@ -30,6 +33,9 @@ const modules: AuditModule[] = [
   checkSecurity,
   checkMobile,
   checkAccessibility,
+  checkAiReadiness,
+  checkSitemap,
+  checkStructuredData,
 ]
 
 /**
@@ -84,7 +90,8 @@ export async function runCustomAuditWithMeta(url: string): Promise<CustomAuditWi
   // Step 3: Run all modules in parallel with individual timeouts
   const moduleNames = [
     'broken-links', 'images', 'assets', 'meta-tags',
-    'headings', 'security', 'mobile', 'accessibility',
+    'headings', 'security', 'mobile', 'accessibility', 'ai-readiness',
+    'sitemap', 'structured-data',
   ]
   const results = await Promise.allSettled(
     modules.map(mod => runWithTimeout(mod, fetched, $, MODULE_TIMEOUT))
@@ -123,4 +130,3 @@ export async function runCustomAuditWithMeta(url: string): Promise<CustomAuditWi
 
 // Re-export types for convenience
 export type { CustomAuditResult, CategoryResult, AuditFinding } from './types'
-export { calculateHealthScore } from './scorer'

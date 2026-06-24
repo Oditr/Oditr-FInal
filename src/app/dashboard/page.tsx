@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Search, AlertTriangle, ArrowRight, Terminal, Globe, Wifi, Smartphone, Monitor, MapPin, GitCompare, Zap, BarChart3, Eye, ShieldCheck, Shield, Star, ExternalLink, RefreshCw, CheckCircle, XCircle, Clock, WifiOff, Timer, Ban, AlertCircle, Share2, Link2, Rocket, Download, Lock, Sparkles } from 'lucide-react'
+import { Bot, Search, AlertTriangle, ArrowRight, Terminal, Globe, Wifi, Smartphone, Monitor, MapPin, GitCompare, Zap, BarChart3, Eye, ShieldCheck, Shield, Star, ExternalLink, RefreshCw, CheckCircle, XCircle, Clock, WifiOff, Timer, Ban, AlertCircle, Share2, Link2, Rocket, Download, Lock, Sparkles, Bell } from 'lucide-react'
 import ScoreRing from '@/components/ScoreRing'
 import Link from 'next/link'
 import type { AuditResult } from './types'
@@ -11,9 +11,14 @@ import DiagnosticsTab from './DiagnosticsTab'
 import FieldDataTab from './FieldDataTab'
 import SiteAuditTab from './SiteAuditTab'
 import IntelligenceTab from './IntelligenceTab'
+import CopilotTab from './CopilotTab'
 import HistoryTab from './HistoryTab'
 import AnalyticsTab from './AnalyticsTab'
-import { saveScan, getHistory } from '@/lib/scan-store'
+import RevenueImpactTab from '@/components/revenue-impact/RevenueImpactTab'
+import { AIAgentReadinessTab } from './AIAgentReadinessTab'
+import MonitoringSetup from '@/components/MonitoringSetup'
+import { saveScan, getHistory, getUrlHistory } from '@/lib/scan-store'
+import { detectRegressions, type RegressionReport } from '@/lib/intelligence'
 import { useAuth } from '@/components/AuthProvider'
 import { useSyncLocalData } from '@/hooks/useSyncLocalData'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -52,11 +57,12 @@ export default function DashboardPage() {
   const [prevResult, setPrevResult] = useState<AuditResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [regressionReport, setRegressionReport] = useState<RegressionReport | null>(null)
   const [device, setDevice] = useState<'mobile' | 'desktop'>('mobile')
   const [location, setLocation] = useState('US East (Virginia)')
   const [connection, setConnection] = useState('4G (Fast)')
   const [runCount, setRunCount] = useState(0)
-  const [activeTab, setActiveTab] = useState<'intelligence' | 'overview' | 'opportunities' | 'diagnostics' | 'field' | 'siteaudit' | 'history' | 'analytics'>('intelligence')
+  const [activeTab, setActiveTab] = useState<'intelligence' | 'copilot' | 'overview' | 'opportunities' | 'diagnostics' | 'field' | 'siteaudit' | 'ai-readiness' | 'history' | 'analytics' | 'revenue' | 'monitoring'>('intelligence')
 
   // Progress tracking state
   const [elapsed, setElapsed] = useState(0)
@@ -153,6 +159,7 @@ export default function DashboardPage() {
     setAuditError(null)
     setPrevResult(result)
     setResult(null)
+    setRegressionReport(null)
     setActiveTab('intelligence')
     setRetryInfo(null)
     setCurrentStage({ stage: 'connecting', label: 'Connecting', detail: 'Starting audit…', progress: 5 })
@@ -190,9 +197,19 @@ export default function DashboardPage() {
 
       // Save to scan history + persist
       try {
-        saveScan(data, user?.id)
+        const history = await getUrlHistory(targetUrl, user?.id)
+        const previous = history.length > 0 ? history[history.length - 1] : null
+
+        const stored = await saveScan(data, { userId: user?.id })
         localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({ result: data, url: targetUrl }))
-      } catch { /* quota exceeded */ }
+
+        if (previous) {
+          const report = detectRegressions(stored, previous)
+          if (report.hasRegression) {
+            setRegressionReport(report)
+          }
+        }
+      } catch { /* quota exceeded or save error */ }
 
     } catch (err: any) {
       if (err.name === 'AbortError') {
@@ -543,9 +560,29 @@ export default function DashboardPage() {
           )
         })()}
 
-        {/* ── Results ── */}
         {result && !loading && (
           <div className="animate-fade-up">
+            {/* Regression Alert */}
+            {regressionReport?.hasRegression && (
+              <div style={{
+                padding: '1rem', borderRadius: 10, marginBottom: '1.25rem',
+                background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.3)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <AlertTriangle size={16} color="#f87171" />
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#f87171' }}>Regressions Detected Since Last Scan</span>
+                </div>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {regressionReport.details.map((detail, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: detail.severity === 'critical' ? '#f87171' : '#fbbf24' }} />
+                      <strong style={{ color: 'var(--text-primary)' }}>{detail.title}:</strong> {detail.description}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Partial results banner */}
             {result.partial && (
               <div style={{
@@ -620,12 +657,29 @@ export default function DashboardPage() {
                   {shareSuccess ? <><Link2 size={12} /> Copied!</> : shareLoading ? <><RefreshCw size={12} style={{ animation: 'spin 0.8s linear infinite' }} /> Sharing…</> : <><Share2 size={12} /> Share</>}
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (plan === 'free') {
                       alert('PDF export is available on Starter ($5/mo) and above. Visit /pricing to upgrade.')
                       return
                     }
-                    generatePdfReport(result)
+                    
+                    try {
+                      // Attempt to fetch the latest revenue report to include in the PDF
+                      const projectId = result.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+                      const res = await fetch(`/api/v1/revenue/report?projectId=${encodeURIComponent(projectId)}&limit=1`)
+                      const data = await res.json()
+                      
+                      let revenueReport = undefined
+                      if (data?.reports && data.reports.length > 0) {
+                        revenueReport = data.reports[0]
+                      }
+                      
+                      generatePdfReport(result, revenueReport)
+                    } catch (e) {
+                      // Fallback to basic report if fetch fails
+                      generatePdfReport(result)
+                    }
+                    
                     trackFeature('pdf_export')
                   }}
                   className="btn-ghost"
@@ -770,13 +824,17 @@ export default function DashboardPage() {
             <div id="tab-navigation" style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto' }}>
               {([
                 { id: 'intelligence', label: `Intelligence (${result.intelligence?.totalIssues ?? 0})`, icon: <Sparkles size={13} /> },
+                { id: 'copilot', label: 'Copilot', icon: <Sparkles size={13} /> },
                 { id: 'overview', label: 'Core Web Vitals', icon: <BarChart3 size={13} /> },
                 { id: 'siteaudit', label: `Site Audit (${result.customAudit?.totalFindings ?? 0})`, icon: <ShieldCheck size={13} /> },
+                { id: 'ai-readiness', label: 'AI Readiness', icon: <Bot size={13} /> },
                 { id: 'opportunities', label: `Opportunities (${result.opportunities?.length ?? 0})`, icon: <Zap size={13} /> },
                 { id: 'diagnostics', label: 'Diagnostics', icon: <Eye size={13} /> },
                 { id: 'field', label: 'Field Data', icon: <Star size={13} /> },
+                { id: 'revenue', label: 'Revenue Impact', icon: <BarChart3 size={13} /> },
                 { id: 'history', label: 'History', icon: <Clock size={13} /> },
                 { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={13} /> },
+                { id: 'monitoring', label: 'Alerts', icon: <Bell size={13} /> },
               ] as const).map(t => (
                 <button key={t.id} onClick={() => setActiveTab(t.id as any)} className={`tab-underline${activeTab === t.id ? ' active' : ''}`}>
                   {t.icon} {t.label}
@@ -786,13 +844,19 @@ export default function DashboardPage() {
 
             {/* ── Tab content ── */}
             {activeTab === 'intelligence' && <IntelligenceTab result={result} />}
+            {activeTab === 'copilot' && <CopilotTab result={result} />}
             {activeTab === 'overview' && <OverviewTab result={result} />}
             {activeTab === 'opportunities' && <OpportunitiesTab result={result} />}
             {activeTab === 'diagnostics' && <DiagnosticsTab result={result} />}
             {activeTab === 'field' && <FieldDataTab result={result} />}
             {activeTab === 'siteaudit' && <SiteAuditTab result={result} />}
+            {activeTab === 'ai-readiness' && <AIAgentReadinessTab result={result.customAudit?.categories?.find(c => c.category === 'ai-readiness')} onReAudit={runAudit} isAuditing={loading} />}
             {activeTab === 'history' && <HistoryTab currentUrl={result.url} />}
+            {activeTab === 'revenue' && <RevenueImpactTab result={result} />}
             {activeTab === 'analytics' && <AnalyticsTab />}
+            {activeTab === 'monitoring' && (
+              <MonitoringSetup userId={user?.id ?? ''} />
+            )}
 
             {/* ── CTA ── */}
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>

@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Business Impact Engine ──
+// ── Oditr Intelligence Engine — Business Impact Engine ──
 // Translates raw technical metrics into human-understandable business outcomes.
 // Every metric gets a narrative, a UX rating, and optional category-specific context.
 
@@ -244,7 +244,16 @@ export function generateMetricNarratives(
   if (cwv.lcp?.numericValue != null) {
     const val = cwv.lcp.numericValue
     const rating = rateLcp(val)
-    const categoryNote = catCtx.lcp?.[rating]
+    let categoryNote = catCtx.lcp?.[rating]
+
+    if (siteCategory === 'ecommerce' && val > 2500) {
+      const excessMs = val - 2500
+      const conversionDropPercent = (excessMs / 100) * 0.7 // Assume 0.7% drop per 100ms over 2.5s
+      if (conversionDropPercent >= 1) {
+        categoryNote = `For e-commerce, this ${formatMs(excessMs)} excess delay is projected to cause an estimated ${conversionDropPercent.toFixed(1)}% drop in conversion rate compared to an optimal load time.`
+      }
+    }
+
     narratives.push({
       metric: 'LCP',
       rawValue: val,

@@ -4,7 +4,7 @@
 // Pro plan: 1,000 req/day | Enterprise: 10,000 req/day
 
 import { NextRequest, NextResponse } from 'next/server'
-import { runCustomAudit, calculateHealthScore } from '@/lib/audit-engine'
+import { runCustomAudit } from '@/lib/audit-engine'
 import { cacheKey, getCached, setCache } from '@/lib/audit-engine/cache'
 import { fetchPSI } from '@/lib/psi-pool'
 import {
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
     const psiPerf = lighthouse?.scores?.performance ?? 0
     const customScore = custom?.overallScore ?? 0
     const healthScore = lighthouse && custom
-      ? calculateHealthScore(psiPerf, customScore)
+      ? Math.round(psiPerf * 0.6 + customScore * 0.4)
       : lighthouse ? psiPerf : customScore
 
     // ── Build Response ──

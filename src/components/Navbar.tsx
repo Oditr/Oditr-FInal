@@ -24,6 +24,11 @@ export default function Navbar() {
   const [showAuth, setShowAuth] = useState(false)
   const { user, signOut, isConfigured } = useAuth()
 
+  const dynamicLinks = [...links]
+  if (user) {
+    dynamicLinks.push({ href: '/dashboard/team', label: 'Teams' })
+  }
+
   return (
     <>
     <nav style={{
@@ -44,13 +49,13 @@ export default function Navbar() {
             <Zap size={15} color="#fff" fill="#fff" />
           </div>
           <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            VitalFix
+            Øditr
           </span>
         </Link>
 
         {/* Desktop Nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.125rem' }} className="desktop-nav">
-          {links.map(l => {
+          {dynamicLinks.map(l => {
             const isActive = pathname === l.href
             return (
               <Link key={l.href} href={l.href} style={{
@@ -132,7 +137,7 @@ export default function Navbar() {
         background: 'var(--bg)',
       }}>
         <div className="container-pad" style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-          {links.map(l => (
+          {dynamicLinks.map(l => (
             <Link key={l.href} href={l.href} onClick={() => setOpen(false)} style={{
               padding: '0.5rem 0.75rem', borderRadius: 6, textDecoration: 'none',
               fontSize: '0.85rem', fontWeight: 500,

@@ -176,9 +176,41 @@ function IssueCard({ issue, isExpanded, onToggle }: {
               }}>Lighthouse</span>
             )}
           </div>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0, marginBottom: '0.4rem' }}>
             {issue.businessNarrative.slice(0, 140)}{issue.businessNarrative.length > 140 ? '…' : ''}
           </p>
+          
+          {/* Affected Metrics Badges */}
+          {issue.affectedMetrics && issue.affectedMetrics.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+              {issue.affectedMetrics.map(metric => (
+                <span key={metric} style={{
+                  fontSize: '0.58rem', fontWeight: 600, padding: '0.12rem 0.4rem', borderRadius: 4,
+                  background: 'rgba(167,139,250,0.12)', color: '#a78bfa',
+                  border: '1px solid rgba(167,139,250,0.25)',
+                  display: 'flex', alignItems: 'center', gap: '0.2rem'
+                }}>
+                  Affects {metric}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {/* Metadata tags (Confidence, Impact, Effort) */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.15rem 0.4rem', borderRadius: 4, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+              <Shield size={9} color="#818cf8" />
+              Conf: <span style={{ color: '#818cf8' }}>{issue.confidenceScore}%</span>
+            </span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.15rem 0.4rem', borderRadius: 4, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+              <Target size={9} color="#f87171" />
+              Impact: <span style={{ color: '#f87171' }}>{issue.impactScore}/100</span>
+            </span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.15rem 0.4rem', borderRadius: 4, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+              <Gauge size={9} color="#34d399" />
+              Effort: <span style={{ color: '#34d399' }}>{issue.effortScore}/100</span>
+            </span>
+          </div>
         </div>
 
         {/* Estimated improvement badge */}
@@ -227,8 +259,8 @@ function IssueCard({ issue, isExpanded, onToggle }: {
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>{issue.expectedBenefit}</p>
           </div>
 
-          {/* Framework hint */}
-          {issue.frameworkHint && (
+          {/* Framework hint (Legacy/Text-only) */}
+          {!issue.fixSnippet && issue.frameworkHint && (
             <div style={{ padding: '0 1rem 0.85rem' }}>
               <div style={{
                 padding: '0.65rem 0.85rem', borderRadius: 8,
@@ -243,8 +275,55 @@ function IssueCard({ issue, isExpanded, onToggle }: {
             </div>
           )}
 
-          {/* Fix instructions */}
-          {issue.fix && (
+          {/* Fix Snippet Engine */}
+          {issue.fixSnippet && (
+            <div style={{ padding: '0 1rem 0.85rem' }}>
+              <div style={{
+                padding: '0.85rem', borderRadius: 8,
+                background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.2)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}>
+                  <Code2 size={12} color="#34d399" />
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.04em' }}>One-Click Fix ({issue.fixSnippet.language})</span>
+                </div>
+                {issue.fixSnippet.description && (
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0, marginBottom: '0.65rem' }}>
+                    {issue.fixSnippet.description}
+                  </p>
+                )}
+                <div style={{ position: 'relative' }}>
+                  <pre style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem',
+                    padding: '0.75rem 1rem', borderRadius: 6,
+                    background: '#0d0d14', color: '#c9d1d9',
+                    lineHeight: 1.6, overflow: 'auto', maxHeight: 250,
+                    border: '1px solid rgba(255,255,255,0.06)', margin: 0,
+                  }}>
+                    {issue.fixSnippet.code}
+                  </pre>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); copySnippet(issue.fixSnippet!.code) }}
+                    style={{
+                      position: 'absolute', top: 6, right: 6,
+                      display: 'flex', alignItems: 'center', gap: '0.25rem',
+                      padding: '0.2rem 0.5rem', borderRadius: 4,
+                      background: copied ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.06)',
+                      color: copied ? '#34d399' : '#94a3b8',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      fontSize: '0.65rem', fontWeight: 600, cursor: 'pointer',
+                      transition: 'all 150ms',
+                    }}
+                  >
+                    <Copy size={10} />
+                    {copied ? 'Copied!' : 'Copy Fix'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fix instructions (Legacy Lighthouse) */}
+          {!issue.fixSnippet && issue.fix && (
             <div style={{
               padding: '0.85rem 1rem',
               borderTop: '1px solid var(--border)',
@@ -429,7 +508,7 @@ export default function IntelligenceTab({ result }: { result: AuditResult }) {
           }}>
             <Sparkles size={16} color={uxColor} />
           </div>
-          <span style={{ fontWeight: 800, fontSize: '1rem' }}>VitalFix Intelligence Report</span>
+          <span style={{ fontWeight: 800, fontSize: '1rem' }}>Øditr Intelligence Report</span>
           <span style={{
             fontSize: '0.65rem', fontWeight: 700, padding: '0.12rem 0.45rem', borderRadius: 4,
             background: `${uxColor}12`, color: uxColor,

@@ -1,7 +1,7 @@
-# 🧾 Product Requirements Document (PRD) — VitalFix
+# 🧾 Product Requirements Document (PRD) — Øditr
 
 ## 1. Product Overview
-**Name:** VitalFix  
+**Name:** Øditr  
 **One-liner:** Web performance intelligence platform — audit, fix, and monitor Core Web Vitals from a single dashboard.  
 **Type:** SaaS Web App + REST API  
 **Stack:** Next.js 14 · Supabase · Stripe · Google PSI + CrUX  
@@ -199,7 +199,7 @@
 
 ## 14. Future Enhancements
 - **Phase 2:** Scheduled monitoring (cron, 10 URLs for Pro), performance budgets, alerts
-- **Phase 3:** CLI tool (`npx vitalfix audit`), GitHub Action for CI/CD
+- **Phase 3:** CLI tool (`npx oditr audit`), GitHub Action for CI/CD
 - **Phase 4:** Team/org management, white-label branding, custom SLA
 - **Phase 5:** AI fix recommendations, competitive benchmarking
 

@@ -1,7 +1,7 @@
-# VitalFix Architecture Overview
+# Øditr Architecture Overview
 
 ## 1. Architecture Overview
-VitalFix is built as a highly scalable Next.js 15 (App Router) application. The architecture has evolved from a simple audit-reporting tool into an intelligent website performance decision engine.
+Øditr is built as a highly scalable Next.js 15 (App Router) application. The architecture has evolved from a simple audit-reporting tool into an intelligent website performance decision engine.
 
 ### Core Stack
 *   **Framework**: Next.js 15 (App Router, React Server Components)
@@ -42,7 +42,7 @@ To address technical debt and finalize the architecture, the following environme
 ---
 
 ## 4. Lighthouse → PageSpeed API Migration Plan
-*Note: VitalFix already utilizes the PageSpeed Insights API (PSI) for backend collection. This migration plan details the architectural shift of moving the **user experience** away from raw Lighthouse scores to the Intelligence Engine.*
+*Note: Øditr already utilizes the PageSpeed Insights API (PSI) for backend collection. This migration plan details the architectural shift of moving the **user experience** away from raw Lighthouse scores to the Intelligence Engine.*
 
 ### Phase 1: Abstraction (Completed)
 *   Create the `IntelligenceEngine` to wrap raw PSI data.

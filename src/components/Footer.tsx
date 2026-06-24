@@ -12,7 +12,7 @@ export default function Footer() {
               <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Zap size={13} color="#fff" fill="#fff" />
               </div>
-              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>VitalFix</span>
+              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Øditr</span>
             </Link>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: 220 }}>
               Production-ready tools to fix Core Web Vitals and ship faster websites.
@@ -48,7 +48,7 @@ export default function Footer() {
         </div>
 
         <div style={{ borderTop: '1px solid var(--border)', marginTop: '2rem', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>© {new Date().getFullYear()} VitalFix</p>
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>© {new Date().getFullYear()} Øditr</p>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Built for developers, by developers</p>
         </div>
       </div>

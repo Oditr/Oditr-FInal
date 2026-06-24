@@ -1,4 +1,4 @@
-// ── VitalFix RUM — vf.js Script Source ──
+// ── Oditr RUM — vf.js Script Source ──
 // This file contains the source code for the vf.js monitoring script.
 // It is served as a static JavaScript file or via an API route.
 //

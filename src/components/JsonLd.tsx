@@ -21,7 +21,7 @@ export function OrganizationJsonLd() {
     <JsonLd data={{
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'VitalFix',
+      name: 'Øditr',
       url: 'https://vitalfix.dev',
       logo: 'https://vitalfix.dev/favicon.ico',
       description: 'Core Web Vitals audit and optimization platform for developers.',
@@ -35,7 +35,7 @@ export function WebSiteJsonLd() {
     <JsonLd data={{
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'VitalFix',
+      name: 'Øditr',
       url: 'https://vitalfix.dev',
       potentialAction: {
         '@type': 'SearchAction',
@@ -54,7 +54,7 @@ export function WebApplicationJsonLd() {
     <JsonLd data={{
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'VitalFix',
+      name: 'Øditr',
       url: 'https://vitalfix.dev',
       applicationCategory: 'DeveloperApplication',
       operatingSystem: 'All',
@@ -106,12 +106,12 @@ export function ArticleJsonLd({
       url,
       author: {
         '@type': 'Organization',
-        name: 'VitalFix',
+        name: 'Øditr',
         url: 'https://vitalfix.dev',
       },
       publisher: {
         '@type': 'Organization',
-        name: 'VitalFix',
+        name: 'Øditr',
         url: 'https://vitalfix.dev',
       },
     }} />

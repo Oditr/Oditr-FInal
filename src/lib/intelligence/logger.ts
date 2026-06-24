@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Structured Logger ──
+// ── Oditr Intelligence Engine — Structured Logger ──
 // Lightweight structured logging with namespace prefixes.
 // All intelligence modules use this for consistent, filterable output.
 

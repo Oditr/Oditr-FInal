@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Framework Detector ──
+// ── Oditr Intelligence Engine — Framework Detector ──
 // Identifies the technology stack from HTML content, HTTP headers, and URL patterns.
 // Used to generate framework-specific recommendations.
 
@@ -328,8 +328,27 @@ export function detectFramework(
     url,
   })
 
+  let version: string | undefined
+
+  // Version detection logic
+  if (winner.framework === 'nextjs' && html) {
+    // App Router typically has specific RSC markers, while Pages Router has __NEXT_DATA__
+    if (html.includes('__NEXT_DATA__')) {
+      version = 'pages-router'
+    } else if (html.includes('__next_f') || html.includes('flight-')) {
+      version = 'app-router'
+    }
+  } else if (winner.framework === 'react' && html) {
+    if (html.includes('react@18') || html.includes('react-dom@18')) {
+      version = '18'
+    } else if (html.includes('react@19') || html.includes('react-dom@19')) {
+      version = '19'
+    }
+  }
+
   return {
     framework: winner.framework,
+    version,
     label: winner.label,
     confidence: winner.confidence,
     signals: winner.signals,

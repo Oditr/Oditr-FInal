@@ -30,6 +30,9 @@ export type AuditCategory =
   | 'security'
   | 'mobile'
   | 'accessibility'
+  | 'ai-readiness'
+  | 'sitemap'
+  | 'structured-data'
 
 export interface CategoryResult {
   category: AuditCategory

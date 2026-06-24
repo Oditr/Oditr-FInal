@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const report = await getReport(id)
 
   if (!report) {
-    return { title: 'Report Not Found — VitalFix' }
+    return { title: 'Report Not Found — Øditr' }
   }
 
   const domain = new URL(report.url).hostname
@@ -68,8 +68,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const emoji = score >= 90 ? '🟢' : score >= 50 ? '🟡' : '🔴'
 
   return {
-    title: `${domain} scored ${score}/100 — VitalFix Audit`,
-    description: `Core Web Vitals audit for ${domain}. Performance: ${report.scores?.performance ?? 'N/A'}, Health Score: ${score}/100. Run your own free audit on VitalFix.`,
+    title: `${domain} scored ${score}/100 — Øditr Audit`,
+    description: `Core Web Vitals audit for ${domain}. Performance: ${report.scores?.performance ?? 'N/A'}, Health Score: ${score}/100. Run your own free audit on Øditr.`,
     openGraph: {
       title: `${emoji} ${domain} — ${score}/100 Web Vitals Score`,
       description: `See the full Core Web Vitals breakdown for ${domain}. Performance: ${report.scores?.performance ?? 'N/A'}/100. Run your own audit free.`,
@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${emoji} ${domain} — ${score}/100 on VitalFix`,
+      title: `${emoji} ${domain} — ${score}/100 on Øditr`,
       description: `Core Web Vitals audit results. Run your own free audit.`,
     },
   }
@@ -313,7 +313,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
-            name: 'VitalFix',
+            name: 'Øditr',
             url: 'https://vitalfix.dev',
             applicationCategory: 'DeveloperApplication',
             description: 'Core Web Vitals audit and optimization platform for developers.',

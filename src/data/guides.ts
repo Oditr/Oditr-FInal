@@ -69,7 +69,7 @@ export const guides: Guide[] = [
       },
       {
         heading: 'Measuring LCP',
-        content: `Use these tools to measure and track LCP:\n\n1. **VitalFix Dashboard** — run a free audit at vitalfix.dev/dashboard\n2. **Chrome DevTools** → Performance tab → look for "LCP" marker\n3. **PageSpeed Insights** — pagespeed.web.dev\n4. **web-vitals library** — \`onLCP(console.log)\` in your JavaScript\n5. **Chrome UX Report** — real user data from Search Console`
+        content: `Use these tools to measure and track LCP:\n\n1. **Øditr Dashboard** — run a free audit at vitalfix.dev/dashboard\n2. **Chrome DevTools** → Performance tab → look for "LCP" marker\n3. **PageSpeed Insights** — pagespeed.web.dev\n4. **web-vitals library** — \`onLCP(console.log)\` in your JavaScript\n5. **Chrome UX Report** — real user data from Search Console`
       },
     ],
     relatedSlugs: ['fix-cls', 'reduce-ttfb', 'lazy-loading-images'],
@@ -215,7 +215,7 @@ export const guides: Guide[] = [
       },
       {
         heading: 'Step 1: Run a Baseline Audit',
-        content: `Before making any changes, run an audit on VitalFix to establish your baseline:\n\n1. Go to **vitalfix.dev/dashboard**\n2. Enter your URL and click "Run Audit"\n3. Note your Performance, LCP, TBT, and CLS values\n4. Check the "Opportunities" tab for prioritized fixes\n\nThis gives you a clear before/after comparison.`
+        content: `Before making any changes, run an audit on Øditr to establish your baseline:\n\n1. Go to **vitalfix.dev/dashboard**\n2. Enter your URL and click "Run Audit"\n3. Note your Performance, LCP, TBT, and CLS values\n4. Check the "Opportunities" tab for prioritized fixes\n\nThis gives you a clear before/after comparison.`
       },
       {
         heading: 'Step 2: Fix the Highest-Impact Issues',
@@ -223,7 +223,7 @@ export const guides: Guide[] = [
       },
       {
         heading: 'Step 3: Re-Test and Iterate',
-        content: `After each change:\n\n1. Deploy to a staging environment\n2. Run another audit on VitalFix\n3. Compare against your baseline using the History tab\n4. Repeat until you hit 90+\n\nReal improvement is iterative. Don't try to fix everything at once — tackle the biggest wins first.`
+        content: `After each change:\n\n1. Deploy to a staging environment\n2. Run another audit on Øditr\n3. Compare against your baseline using the History tab\n4. Repeat until you hit 90+\n\nReal improvement is iterative. Don't try to fix everything at once — tackle the biggest wins first.`
       },
     ],
     relatedSlugs: ['fix-lcp', 'fix-inp', 'fix-cls', 'reduce-ttfb'],

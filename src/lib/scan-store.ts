@@ -20,10 +20,18 @@ export { relativeTime, groupByDate, type StoredScan } from '@/lib/scan-history'
 
 // ── Helpers: convert between StoredScan and DB row ──
 
-function toDbRow(scan: StoredScan, userId: string) {
+interface SaveOptions {
+  userId?: string | null;
+  teamId?: string | null;
+  projectId?: string | null;
+}
+
+function toDbRow(scan: StoredScan, options: SaveOptions) {
   return {
     id: scan.id,
-    user_id: userId,
+    user_id: options.userId,
+    team_id: options.teamId,
+    project_id: options.projectId,
     url: scan.url,
     strategy: scan.strategy,
     fetched_at: scan.fetchedAt,
@@ -37,10 +45,11 @@ function toDbRow(scan: StoredScan, userId: string) {
     minor: scan.minor,
     field_overall_category: scan.fieldOverallCategory,
     partial: scan.partial,
+    intelligence_snapshot: scan.intelligenceSnapshot,
   }
 }
 
-function fromDbRow(row: any): StoredScan {
+function fromDbRow(row: any): StoredScan & { teamId?: string; projectId?: string } {
   return {
     id: row.id,
     url: row.url,
@@ -56,21 +65,24 @@ function fromDbRow(row: any): StoredScan {
     minor: row.minor,
     fieldOverallCategory: row.field_overall_category,
     partial: row.partial,
+    intelligenceSnapshot: row.intelligence_snapshot,
+    teamId: row.team_id,
+    projectId: row.project_id,
   }
 }
 
 // ── Save a scan ──
 
-export async function saveScan(result: AuditResult, userId?: string | null): Promise<StoredScan> {
+export async function saveScan(result: AuditResult, options?: SaveOptions): Promise<StoredScan> {
   // Always save to localStorage as the local version of saveScan returns StoredScan
   const stored = localSave(result)
 
   // If authenticated + Supabase configured, also persist to cloud
-  if (userId && supabase) {
+  if (options?.userId && supabase) {
     try {
       const { error } = await supabase
         .from('scans')
-        .upsert(toDbRow(stored, userId), { onConflict: 'id' })
+        .upsert(toDbRow(stored, options), { onConflict: 'id' })
       if (error) console.error('[scan-store] Cloud save failed:', error.message)
     } catch (e) {
       console.error('[scan-store] Cloud save exception:', e)
@@ -82,13 +94,18 @@ export async function saveScan(result: AuditResult, userId?: string | null): Pro
 
 // ── Get all history ──
 
-export async function getHistory(userId?: string | null): Promise<StoredScan[]> {
-  if (userId && supabase) {
+export async function getHistory(userId?: string | null, teamId?: string | null): Promise<StoredScan[]> {
+  if ((userId || teamId) && supabase) {
     try {
-      const { data, error } = await supabase
-        .from('scans')
-        .select('*')
-        .eq('user_id', userId)
+      let query = supabase.from('scans').select('*')
+      
+      if (teamId) {
+        query = query.eq('team_id', teamId)
+      } else if (userId) {
+        query = query.eq('user_id', userId).is('team_id', null)
+      }
+
+      const { data, error } = await query
         .order('fetched_at', { ascending: false })
         .limit(50)
 
@@ -105,13 +122,18 @@ export async function getHistory(userId?: string | null): Promise<StoredScan[]> 
 
 // ── Get URL-specific history ──
 
-export async function getUrlHistory(url: string, userId?: string | null): Promise<StoredScan[]> {
-  if (userId && supabase) {
+export async function getUrlHistory(url: string, userId?: string | null, teamId?: string | null): Promise<StoredScan[]> {
+  if ((userId || teamId) && supabase) {
     try {
-      const { data, error } = await supabase
-        .from('scans')
-        .select('*')
-        .eq('user_id', userId)
+      let query = supabase.from('scans').select('*')
+      
+      if (teamId) {
+        query = query.eq('team_id', teamId)
+      } else if (userId) {
+        query = query.eq('user_id', userId).is('team_id', null)
+      }
+
+      const { data, error } = await query
         .ilike('url', `%${url.replace(/^https?:\/\//, '').replace(/\/$/, '')}%`)
         .order('fetched_at', { ascending: true })
 
@@ -221,7 +243,7 @@ export async function migrateLocalToCloud(userId: string): Promise<{ migrated: n
   console.log(`[scan-store] Migrating ${localScans.length} local scans to Supabase…`)
 
   // Upsert all scans to cloud
-  const rows = localScans.map(scan => toDbRow(scan, userId))
+  const rows = localScans.map(scan => toDbRow(scan, { userId }))
   const { error } = await supabase
     .from('scans')
     .upsert(rows, { onConflict: 'id' })

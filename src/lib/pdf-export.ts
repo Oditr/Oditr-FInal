@@ -1,9 +1,10 @@
 // ── PDF Report Export ──
 // Client-side PDF generation using jsPDF.
-// Generates a branded VitalFix audit report from AuditResult.
+// Generates a branded Oditr audit report from AuditResult.
 
 import { jsPDF } from 'jspdf'
 import type { AuditResult } from '@/app/dashboard/types'
+import type { RevenueImpactResult } from '@/lib/revenue-impact'
 
 // ── Color Helpers ──
 
@@ -20,14 +21,45 @@ function hexToRgb(hex: string): [number, number, number] {
   return [r, g, b]
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: '$', INR: '₹', EUR: '€', GBP: '£', AUD: 'A$', CAD: 'C$',
+}
+
+function formatCurrency(amount: number, currency: string): string {
+  const symbol = CURRENCY_SYMBOLS[currency] || currency + ' '
+  if (amount >= 1_000_000) return `${symbol}${(amount / 1_000_000).toFixed(1)}M`
+  if (amount >= 1_000) return `${symbol}${(amount / 1_000).toFixed(1)}K`
+  return `${symbol}${Math.round(amount)}`
+}
+
 // ── Main Export Function ──
 
-export function generatePdfReport(result: AuditResult): void {
+export function generatePdfReport(result: AuditResult, revenueReport?: RevenueImpactResult): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const margin = 18
   const contentW = pageW - margin * 2
   let y = margin
+
+  // Helper to add header to a new page
+  function addPageHeader(title: string) {
+    doc.addPage()
+    y = margin
+    doc.setFillColor(15, 15, 25)
+    doc.rect(0, 0, pageW, 30, 'F')
+    
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Oditr — ${title}`, margin, 18)
+    
+    const displayUrl = result.url.length > 50 ? result.url.slice(0, 47) + '...' : result.url
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(160, 170, 190)
+    doc.text(displayUrl, pageW - margin, 18, { align: 'right' })
+    y = 40
+  }
 
   // ── Header Bar ──
   doc.setFillColor(15, 15, 25)
@@ -36,7 +68,7 @@ export function generatePdfReport(result: AuditResult): void {
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
-  doc.text('VitalFix', margin, 16)
+  doc.text('Oditr', margin, 16)
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
@@ -199,6 +231,8 @@ export function generatePdfReport(result: AuditResult): void {
 
   // ── Top Opportunities ──
   if (result.opportunities && result.opportunities.length > 0) {
+    if (y > 230) addPageHeader('Audit Opportunities')
+
     doc.setTextColor(200, 210, 230)
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
@@ -232,10 +266,7 @@ export function generatePdfReport(result: AuditResult): void {
 
   // ── Custom Audit Category Breakdown ──
   if (result.customAudit && result.customAudit.categories.length > 0) {
-    if (y > 240) {
-      doc.addPage()
-      y = margin
-    }
+    if (y > 240) addPageHeader('Audit Breakdown')
 
     doc.setTextColor(200, 210, 230)
     doc.setFontSize(11)
@@ -269,7 +300,75 @@ export function generatePdfReport(result: AuditResult): void {
     })
   }
 
-  // ── Footer ──
+  // ── REVENUE IMPACT SECTION ──
+  if (revenueReport && revenueReport.issueImpacts.length > 0) {
+    addPageHeader('Revenue Impact Analysis')
+    
+    // Total Revenue at Risk Box
+    doc.setFillColor(28, 28, 45)
+    doc.roundedRect(margin, y, contentW, 26, 2, 2, 'F')
+    
+    doc.setTextColor(140, 150, 170)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Estimated Revenue at Risk (Monthly)', margin + 6, y + 8)
+    
+    doc.setTextColor(248, 113, 113) // #f87171 red
+    doc.setFontSize(20)
+    doc.setFont('helvetica', 'bold')
+    doc.text(formatCurrency(revenueReport.totalEstimatedRevenueAtRisk, revenueReport.currency), margin + 6, y + 18)
+    
+    // Confidence indicator
+    doc.setTextColor(140, 150, 170)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Confidence: ${revenueReport.overallConfidence.toUpperCase()}`, pageW - margin - 6, y + 8, { align: 'right' })
+    
+    y += 34
+    
+    // Top Priority Issues List
+    doc.setTextColor(200, 210, 230)
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Top Revenue Risks', margin, y + 4)
+    y += 10
+    
+    const topImpacts = revenueReport.issueImpacts
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 15) // Top 15 to fit on a page
+      
+    topImpacts.forEach((impact, i) => {
+      if (y > 270) {
+        addPageHeader('Revenue Impact Analysis (Cont.)')
+      }
+      
+      doc.setFillColor(i % 2 === 0 ? 22 : 18, i % 2 === 0 ? 22 : 18, i % 2 === 0 ? 36 : 30)
+      doc.rect(margin, y - 1, contentW, 10, 'F')
+      
+      // Issue Title
+      doc.setTextColor(200, 210, 230)
+      doc.setFontSize(7.5)
+      doc.setFont('helvetica', 'normal')
+      const title = impact.issueTitle.length > 55 ? impact.issueTitle.slice(0, 52) + '...' : impact.issueTitle
+      doc.text(title, margin + 4, y + 5.5)
+      
+      // Revenue Amount
+      doc.setTextColor(248, 113, 113)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text(formatCurrency(impact.estimatedRevenueAtRisk, revenueReport.currency), pageW - margin - 35, y + 5.5, { align: 'right' })
+      
+      // Priority label
+      doc.setTextColor(140, 150, 170)
+      doc.setFontSize(6.5)
+      doc.setFont('helvetica', 'normal')
+      doc.text(impact.priorityLabel.replace(' Revenue Risk', ''), pageW - margin - 4, y + 5.5, { align: 'right' })
+      
+      y += 10
+    })
+  }
+
+  // ── Footer (last page only) ──
   const footerY = doc.internal.pageSize.getHeight() - 12
   doc.setFillColor(15, 15, 25)
   doc.rect(0, footerY - 4, pageW, 16, 'F')
@@ -277,11 +376,11 @@ export function generatePdfReport(result: AuditResult): void {
   doc.setTextColor(100, 110, 130)
   doc.setFontSize(7)
   doc.setFont('helvetica', 'normal')
-  doc.text('Generated by VitalFix — vitalfix.dev', margin, footerY + 2)
-  doc.text('© ' + new Date().getFullYear() + ' VitalFix', pageW - margin, footerY + 2, { align: 'right' })
+  doc.text('Generated by Oditr — oditr.com', margin, footerY + 2)
+  doc.text('© ' + new Date().getFullYear() + ' Oditr', pageW - margin, footerY + 2, { align: 'right' })
 
   // ── Save ──
   const slug = result.url.replace(/^https?:\/\//, '').replace(/[^a-zA-Z0-9]/g, '-').slice(0, 40)
   const date = new Date(result.fetchedAt).toISOString().slice(0, 10)
-  doc.save(`vitalfix-report-${slug}-${date}.pdf`)
+  doc.save(`oditr-report-${slug}-${date}.pdf`)
 }

@@ -9,7 +9,7 @@ import { checkHeadings } from '@/lib/audit-engine/headings'
 import { checkSecurity } from '@/lib/audit-engine/security'
 import { checkMobile } from '@/lib/audit-engine/mobile'
 import { checkAccessibility } from '@/lib/audit-engine/accessibility'
-import { calculateOverallScore, calculateHealthScore, countBySeverity } from '@/lib/audit-engine/scorer'
+import { calculateOverallScore, countBySeverity } from '@/lib/audit-engine/scorer'
 
 // ── Realistic test page ──
 const REALISTIC_HTML = `
@@ -135,10 +135,6 @@ describe('Integration: Multi-module audit on a well-formed page', () => {
     const overallScore = calculateOverallScore(categories)
     expect(overallScore).toBeGreaterThanOrEqual(70)
     expect(overallScore).toBeLessThanOrEqual(100)
-
-    const healthScore = calculateHealthScore(85, overallScore) // simulated Lighthouse perf = 85
-    expect(healthScore).toBeGreaterThanOrEqual(50)
-    expect(healthScore).toBeLessThanOrEqual(100)
 
     const severity = countBySeverity(categories)
     expect(severity.critical).toBeGreaterThanOrEqual(0)

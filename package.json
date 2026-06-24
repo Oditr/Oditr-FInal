@@ -13,11 +13,16 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.80",
     "@sentry/nextjs": "^10.48.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
+    "ai": "^6.0.199",
     "bottleneck": "^2.19.5",
     "cheerio": "^1.2.0",
+    "inngest": "^4.11.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.400.0",
     "motion": "^12.40.0",

@@ -83,7 +83,7 @@ export type AuditResult = {
   partial?: boolean
   partialReason?: string
   liteMode?: boolean
-  /** VitalFix Intelligence Report — prioritized issues, business impact, framework detection */
+  /** Oditr Intelligence Report — prioritized issues, business impact, framework detection */
   intelligence?: IntelligenceReport | null
 }
 

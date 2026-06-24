@@ -1,6 +1,6 @@
-// ── VitalFix Intelligence Engine — Trust System ──
+// ── Oditr Intelligence Engine — Trust System ──
 // Attaches confidence levels, evidence sources, and caveats to every intelligence report.
-// Users see transparent reasoning about why VitalFix is confident (or not) in its recommendations.
+// Users see transparent reasoning about why Oditr is confident (or not) in its recommendations.
 
 import type { TrustAssessment, ConfidenceLevel, FrameworkDetection, SiteContext } from './types'
 import { createLogger } from './logger'
@@ -47,7 +47,7 @@ export function assessTrust(params: {
   }
 
   if (hasCustomAudit) {
-    evidenceSources.push('VitalFix 8-module site audit')
+    evidenceSources.push('Oditr 8-module site audit')
     score += 25
   } else {
     caveats.push('Custom site audit unavailable — only Lighthouse data used.')
@@ -57,7 +57,7 @@ export function assessTrust(params: {
     evidenceSources.push('Chrome UX Report (CrUX) real-user data')
     score += 25
   } else {
-    caveats.push('No real-user (field) data available. Scores are based on lab simulation only. Install the VitalFix monitoring script for real-user metrics.')
+    caveats.push('No real-user (field) data available. Scores are based on lab simulation only. Install the Oditr monitoring script for real-user metrics.')
   }
 
   if (hasPsiData && hasCustomAudit) {
@@ -106,7 +106,7 @@ export function assessTrust(params: {
   // Improvement hint
   let improvementHint: string | undefined
   if (!hasFieldData) {
-    improvementHint = 'Install the VitalFix monitoring script to collect real-user data and increase recommendation accuracy.'
+    improvementHint = 'Install the Oditr monitoring script to collect real-user data and increase recommendation accuracy.'
   } else if (!hasPsiData && !hasCustomAudit) {
     improvementHint = 'Rerun the audit to get full results from both analysis engines.'
   } else if (partial) {

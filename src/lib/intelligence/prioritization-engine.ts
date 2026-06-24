@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Prioritization Engine ──
+// ── Oditr Intelligence Engine — Prioritization Engine ──
 // Scores every issue (from Lighthouse opportunities + custom audit findings)
 // and assigns each to a priority tier: fix-first, fix-next, or optional.
 //
@@ -18,6 +18,7 @@ import type {
   Framework,
 } from './types'
 import { createLogger } from './logger'
+import { generateFixSnippet } from './fix-generation-engine'
 
 const log = createLogger('intelligence:prioritization')
 
@@ -77,6 +78,57 @@ const LH_IMPACT_MULTIPLIER: Record<string, number> = {
   high: 1.0,
   medium: 0.7,
   low: 0.4,
+}
+
+// ═══════════════════════════════════════════════
+// KNOWLEDGE GRAPH — Metrics Affected
+// ═══════════════════════════════════════════════
+
+const ISSUE_TO_METRICS_MAP: Record<string, string[]> = {
+  // Images
+  'img-large': ['LCP', 'Bandwidth'],
+  'img-format': ['LCP', 'Bandwidth'],
+  'img-no-lazy': ['LCP', 'Bandwidth'],
+  'img-no-dims': ['CLS'],
+  'img-no-alt': ['Accessibility', 'SEO'],
+  
+  // Lighthouse
+  'render-blocking-resources': ['LCP', 'FCP'],
+  'uses-optimized-images': ['LCP', 'Bandwidth'],
+  'uses-webp-images': ['LCP', 'Bandwidth'],
+  'uses-text-compression': ['LCP', 'Bandwidth'],
+  'unused-javascript': ['LCP', 'INP', 'TBT'],
+  'unused-css-rules': ['LCP', 'FCP'],
+  'dom-size': ['INP', 'TBT', 'CLS'],
+  'bootup-time': ['INP', 'TBT'],
+  'mainthread-work-breakdown': ['INP', 'TBT'],
+  'uses-long-cache-ttl': ['Repeat Load'],
+  'uses-rel-preload': ['LCP', 'FCP'],
+  'uses-rel-preconnect': ['LCP', 'FCP'],
+  'font-display': ['FCP', 'CLS'],
+  'efficient-animated-content': ['INP', 'TBT'],
+  
+  // Assets
+  'render-blocking-css': ['LCP', 'FCP'],
+  'render-blocking-js': ['LCP', 'FCP', 'INP'],
+  'large-asset': ['LCP', 'Bandwidth'],
+  'no-compression': ['LCP', 'Bandwidth'],
+  
+  // Custom Audit Findings
+  'missing-title': ['SEO'],
+  'missing-description': ['SEO'],
+  'no-viewport': ['Mobile UX'],
+  'horizontal-scroll': ['Mobile UX'],
+  'small-tap': ['Mobile UX'],
+  'no-https': ['Security', 'SEO'],
+}
+
+function getAffectedMetrics(id: string): string[] {
+  if (ISSUE_TO_METRICS_MAP[id]) return ISSUE_TO_METRICS_MAP[id]
+  for (const prefix of Object.keys(ISSUE_TO_METRICS_MAP)) {
+    if (id.startsWith(prefix)) return ISSUE_TO_METRICS_MAP[prefix]
+  }
+  return []
 }
 
 // ═══════════════════════════════════════════════
@@ -484,6 +536,8 @@ export function prioritizeIssues(params: {
       whyItMatters: getWhyItMatters(finding.id),
       expectedBenefit: getExpectedBenefit(finding.id),
       estimatedImprovement: getEstimatedImprovement(impactScore),
+      affectedMetrics: getAffectedMetrics(finding.id),
+      fixSnippet: generateFixSnippet(finding.id, framework),
       source: 'custom-audit',
       originalSeverity: finding.severity as any,
       fix: finding.recommendation ? {
@@ -531,6 +585,8 @@ export function prioritizeIssues(params: {
       whyItMatters: getWhyItMatters(opp.id),
       expectedBenefit: getExpectedBenefit(opp.id),
       estimatedImprovement: getEstimatedImprovement(impactScore),
+      affectedMetrics: getAffectedMetrics(opp.id),
+      fixSnippet: generateFixSnippet(opp.id, framework),
       source: 'lighthouse',
       fix: undefined, // Lighthouse opportunities get fixes from the existing OpportunityFixes
     })

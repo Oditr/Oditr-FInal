@@ -577,6 +577,29 @@ function ComparePanel({ a, b, onClose }: { a: StoredScan; b: StoredScan; onClose
           ))}
         </>
       )}
+
+      {/* Intelligence Snapshot Comparison */}
+      {a.intelligenceSnapshot && b.intelligenceSnapshot && (
+        <>
+          <div style={{ borderTop: '1px solid var(--border)', margin: '0.75rem 0 0.5rem', paddingTop: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Top Priorities (Fix First)</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <div style={{ background: 'var(--bg)', padding: '0.5rem', borderRadius: 6 }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#60a5fa', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Scan A Issues</div>
+              <ul style={{ margin: 0, paddingLeft: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'grid', gap: '0.25rem' }}>
+                {a.intelligenceSnapshot.fixFirst?.length ? a.intelligenceSnapshot.fixFirst.map((i: any) => <li key={i.id}>{i.title}</li>) : <li>None</li>}
+              </ul>
+            </div>
+            <div style={{ background: 'var(--bg)', padding: '0.5rem', borderRadius: 6 }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#a78bfa', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Scan B Issues</div>
+              <ul style={{ margin: 0, paddingLeft: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'grid', gap: '0.25rem' }}>
+                {b.intelligenceSnapshot.fixFirst?.length ? b.intelligenceSnapshot.fixFirst.map((i: any) => <li key={i.id}>{i.title}</li>) : <li>None</li>}
+              </ul>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

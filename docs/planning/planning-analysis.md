@@ -1,4 +1,4 @@
-# VitalFix Implementation & Planning Strategy
+# Øditr Implementation & Planning Strategy
 
 ## 5. Prioritized Implementation Backlog
 

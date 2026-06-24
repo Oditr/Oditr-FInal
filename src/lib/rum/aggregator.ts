@@ -1,4 +1,4 @@
-// ── VitalFix RUM — Aggregator ──
+// ── Oditr RUM — Aggregator ──
 // Computes percentile metrics, route breakdowns, and trends
 // from raw rum_events data.
 //

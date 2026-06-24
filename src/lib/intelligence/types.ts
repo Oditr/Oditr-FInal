@@ -1,4 +1,4 @@
-// ── VitalFix Intelligence Engine — Core Types ──
+// ── Oditr Intelligence Engine — Core Types ──
 // All type contracts for the intelligence layer that sits above Lighthouse + Custom Audit
 
 // ═══════════════════════════════════════════════
@@ -7,6 +7,13 @@
 
 /** The three tiers every issue is bucketed into */
 export type PriorityTier = 'fix-first' | 'fix-next' | 'optional'
+
+/** A code snippet for a specific framework */
+export interface CodeSnippet {
+  language: string
+  code: string
+  description?: string
+}
 
 /** A single prioritized issue — the atomic unit of the intelligence output */
 export interface PrioritizedIssue {
@@ -40,6 +47,10 @@ export interface PrioritizedIssue {
   source: 'lighthouse' | 'custom-audit' | 'combined'
   /** Original severity from audit engine (if from custom audit) */
   originalSeverity?: 'critical' | 'moderate' | 'minor' | 'info'
+  /** Which Core Web Vitals this issue affects */
+  affectedMetrics?: string[]
+  /** Detailed fix snippet for the detected framework */
+  fixSnippet?: CodeSnippet
   /** Fix instructions */
   fix?: {
     instruction: string
@@ -98,6 +109,8 @@ export type Framework =
 export interface FrameworkDetection {
   /** Most likely framework */
   framework: Framework
+  /** Framework version if detected */
+  version?: string
   /** Human-readable name */
   label: string
   /** Confidence 0–100 */
@@ -159,6 +172,21 @@ export interface TrustAssessment {
 }
 
 // ═══════════════════════════════════════════════
+// SCORING TYPES
+// ═══════════════════════════════════════════════
+
+export interface HealthScoreResult {
+  overallScore: number
+  breakdown: {
+    speed: { score: number; weight: number }
+    stability: { score: number; weight: number }
+    interactivity: { score: number; weight: number }
+    reliability: { score: number; weight: number }
+    readiness: { score: number; weight: number }
+  }
+}
+
+// ═══════════════════════════════════════════════
 // INTELLIGENCE REPORT — TOP-LEVEL OUTPUT
 // ═══════════════════════════════════════════════
 
@@ -177,6 +205,9 @@ export interface IntelligenceReport {
 
   // ── Business Context ──
   businessSummary: BusinessSummary
+
+  // ── Proprietary Scoring ──
+  oditrScore: HealthScoreResult
 
   // ── Detection Results ──
   detectedFramework: FrameworkDetection

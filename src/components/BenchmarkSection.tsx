@@ -241,7 +241,7 @@ export default function BenchmarkSection() {
         }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Benchmark Intelligence</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>How VitalFix compares to alternatives</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>How Øditr compares to alternatives</div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -288,7 +288,7 @@ export default function BenchmarkSection() {
                 ))}
               </div>
 
-              {/* VitalFix row (highlighted) */}
+              {/* Oditr row (highlighted) */}
               <div style={{
                 display: 'grid', gridTemplateColumns: '1.4fr repeat(4, 1fr)',
                 padding: '0.7rem 0.85rem', gap: '0.25rem', alignItems: 'center',
@@ -296,7 +296,7 @@ export default function BenchmarkSection() {
                 borderBottom: '1px solid var(--border)',
               }}>
                 <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--accent)' }}>
-                  ✦ VitalFix
+                  ✦ Øditr
                 </span>
                 {[true, true, true, true].map((v, i) => (
                   <div key={i} style={{ textAlign: 'center' }}>
@@ -407,7 +407,7 @@ export default function BenchmarkSection() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
                   <Sparkles size={16} color="var(--accent)" />
                   <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent)' }}>
-                    What Makes VitalFix Different
+                    What Makes Øditr Different
                   </span>
                 </div>
 
@@ -423,7 +423,7 @@ export default function BenchmarkSection() {
                   fontSize: '0.84rem', color: 'var(--text-secondary)',
                   lineHeight: 1.7, marginBottom: '1.25rem',
                 }}>
-                  Most tools show you what&apos;s broken. VitalFix shows you <strong style={{ color: 'var(--text-primary)' }}>what to fix</strong>,{' '}
+                  Most tools show you what&apos;s broken. Øditr shows you <strong style={{ color: 'var(--text-primary)' }}>what to fix</strong>,{' '}
                   <strong style={{ color: 'var(--text-primary)' }}>how to fix it</strong>, and{' '}
                   <strong style={{ color: 'var(--text-primary)' }}>how much it&apos;ll improve</strong>. Every audit
                   produces actionable code, prioritized by impact, with expected score uplift.

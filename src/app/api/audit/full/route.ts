@@ -3,7 +3,7 @@
 // Includes caching, rate limiting, and structured error handling
 
 import { NextRequest, NextResponse } from 'next/server'
-import { runCustomAuditWithMeta, calculateHealthScore } from '@/lib/audit-engine'
+import { runCustomAuditWithMeta } from '@/lib/audit-engine'
 import { buildIntelligenceReport } from '@/lib/intelligence'
 import { cacheKey, getCached, setCache } from '@/lib/audit-engine/cache'
 import { fetchPSI, getPoolStatus } from '@/lib/psi-pool'
@@ -47,34 +47,7 @@ function isBlockedHost(hostname: string): boolean {
   return PRIVATE_IP_PATTERNS.some(p => p.test(h))
 }
 
-// ── Rate limiter (in-memory) with periodic cleanup ──
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 5           // max requests
-const RATE_WINDOW = 60_000     // per 60 seconds
-const CLEANUP_INTERVAL = 5 * 60_000 // clean expired entries every 5 minutes
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
-
-// Periodic cleanup to prevent unbounded map growth
-let lastCleanup = Date.now()
-function cleanupRateLimitMap() {
-  const now = Date.now()
-  if (now - lastCleanup < CLEANUP_INTERVAL) return
-  lastCleanup = now
-  rateLimitMap.forEach((entry, ip) => {
-    if (now > entry.resetAt) rateLimitMap.delete(ip)
-  })
-}
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // ── PSI fetch via key pool ──
 const CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo']
@@ -275,8 +248,6 @@ async function fetchLighthouseLite(url: string, strategy: string, timeout: numbe
 
 // ── Main handler ──
 export async function GET(req: NextRequest) {
-  // Cleanup expired rate limit entries periodically
-  cleanupRateLimitMap()
 
   const { searchParams } = new URL(req.url)
   const url = searchParams.get('url')
@@ -322,16 +293,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'URLs pointing to internal or private networks are not allowed.' }, { status: 400 })
   }
 
-  // Rate limiting (IP-based)
-  if (!checkRateLimit(ip)) {
+  // Rate limiting (IP-based) - 5 requests per 60 seconds
+  const rateLimitResult = await checkRateLimit(ip, 5, '60 s')
+  if (!rateLimitResult.success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Try again in 60 seconds.' },
       {
         status: 429,
         headers: {
-          'Retry-After': String(Math.ceil(RATE_WINDOW / 1000)),
-          'X-RateLimit-Limit': String(RATE_LIMIT),
-          'X-RateLimit-Remaining': '0',
+          'Retry-After': String(Math.ceil((rateLimitResult.reset - Date.now()) / 1000)),
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
         },
       }
     )
@@ -514,13 +486,6 @@ export async function GET(req: NextRequest) {
       console.warn('[audit API] Custom audit unavailable, returning PSI only:', customError)
     }
 
-    // Calculate combined health score (handle partial results gracefully)
-    const psiPerf = lighthouseResult?.scores?.performance ?? 0
-    const customScore = customAuditResult?.overallScore ?? 0
-    const healthScore = lighthouseResult && customAuditResult
-      ? calculateHealthScore(psiPerf, customScore)
-      : lighthouseResult ? psiPerf : customScore
-
     // ── Build VitalFix Intelligence Report ──
     // Runs in ~1-5ms — pure in-process computation, no I/O
     const intelligenceReport = buildIntelligenceReport({
@@ -531,6 +496,9 @@ export async function GET(req: NextRequest) {
       headers: auditHeaders,
       hasFieldData: !!lighthouseResult?.fieldData,
     })
+
+    // Use the proprietary VitalFix health score
+    const healthScore = intelligenceReport.oditrScore.overallScore
 
     const response = {
       ...(lighthouseResult || { url: parsedUrl.href, strategy, fetchedAt: new Date().toISOString(), scores: null, cwv: null, fieldData: null, opportunities: [], diagnostics: [] }),
