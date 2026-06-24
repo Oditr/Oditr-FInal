@@ -4,14 +4,14 @@ import crypto from 'crypto'
 export async function inviteMember(workspaceId: string, email: string, role: string, inviterId: string) {
   const supabase = await createClient()
   
-  // Check if they are already a member
-  const { data: user } = await supabase.from('profiles').select('id, auth.users!inner(email)').eq('auth.users.email', email).maybeSingle()
-  if (user) {
-    const { data: existingMember } = await supabase.from('workspace_members').select('id').eq('workspace_id', workspaceId).eq('user_id', user.id).maybeSingle()
-    if (existingMember) {
-      throw new Error('User is already a member of this workspace')
-    }
-  }
+  // Check if they are already a member (Skipped for now due to auth.users join restriction)
+  // const { data: user } = await supabase.from('profiles').select('id, auth.users!inner(email)').eq('auth.users.email', email).maybeSingle()
+  // if (user) {
+  //   const { data: existingMember } = await supabase.from('workspace_members').select('id').eq('workspace_id', workspaceId).eq('user_id', user.id).maybeSingle()
+  //   if (existingMember) {
+  //     throw new Error('User is already a member of this workspace')
+  //   }
+  // }
 
   const token = crypto.randomBytes(32).toString('hex')
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex')

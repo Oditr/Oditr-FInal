@@ -1,5 +1,7 @@
 import { LoginForm } from '@/components/auth/LoginForm'
 import { Metadata } from 'next'
+import { Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Log in to Øditr',
@@ -23,7 +25,9 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-zinc-900 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-zinc-800">
-          <LoginForm />
+          <Suspense fallback={<div className="flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-zinc-400" /></div>}>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>
