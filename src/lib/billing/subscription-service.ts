@@ -1,19 +1,20 @@
 import { supabase } from '@/lib/supabase'
 import { PlanId, Subscription } from './types'
 
-export async function getSubscription(userId: string): Promise<Subscription | null> {
+export async function getSubscription(workspaceId: string): Promise<Subscription | null> {
   if (!supabase) return null
 
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
-    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
     .single()
 
   if (error || !data) return null
 
   return {
     id: data.id,
+    workspaceId: data.workspace_id,
     userId: data.user_id,
     planId: data.plan_id as PlanId,
     status: data.status,
@@ -28,16 +29,17 @@ export async function getSubscription(userId: string): Promise<Subscription | nu
   }
 }
 
-export async function upsertSubscription(userId: string, subscriptionData: Partial<Subscription>): Promise<void> {
+export async function upsertSubscription(workspaceId: string, subscriptionData: Partial<Subscription>): Promise<void> {
   if (!supabase) return
 
   // Map to DB snake_case fields
   const payload: Record<string, any> = {
-    user_id: userId,
+    workspace_id: workspaceId,
     updated_at: new Date().toISOString()
   }
 
   if (subscriptionData.id) payload.id = subscriptionData.id
+  if (subscriptionData.userId) payload.user_id = subscriptionData.userId
   if (subscriptionData.planId) payload.plan_id = subscriptionData.planId
   if (subscriptionData.status) payload.status = subscriptionData.status
   if (subscriptionData.provider) payload.provider = subscriptionData.provider
@@ -49,7 +51,7 @@ export async function upsertSubscription(userId: string, subscriptionData: Parti
 
   const { error } = await supabase
     .from('subscriptions')
-    .upsert(payload, { onConflict: 'user_id' })
+    .upsert(payload, { onConflict: 'workspace_id' })
 
   if (error) {
     console.error('[SubscriptionService] Failed to upsert subscription:', error.message)
@@ -61,8 +63,8 @@ export async function upsertSubscription(userId: string, subscriptionData: Parti
  * Returns the effective plan for a user.
  * Falls back to 'free' if no subscription exists or if it's expired/canceled and past end date.
  */
-export async function getEffectivePlan(userId: string): Promise<PlanId> {
-  const sub = await getSubscription(userId)
+export async function getEffectivePlan(workspaceId: string): Promise<PlanId> {
+  const sub = await getSubscription(workspaceId)
   
   if (!sub) return 'free'
   

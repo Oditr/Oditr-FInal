@@ -33,7 +33,8 @@ export interface PlanConfig {
 
 export interface Subscription {
   id: string
-  userId: string
+  workspaceId: string
+  userId?: string // optional backward compatibility if needed, but primarily workspaceId
   planId: PlanId
   status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid'
   provider: 'stripe' | 'manual'

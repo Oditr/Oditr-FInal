@@ -5,7 +5,8 @@
 -- ── RUM Project Configs ──
 create table if not exists public.rum_configs (
   project_id      text primary key references public.projects(id) on delete cascade,
-  user_id         uuid not null references auth.users(id) on delete cascade,
+  user_id         uuid references auth.users(id) on delete cascade,
+  workspace_id    text references public.workspaces(id) on delete cascade,
   enabled         boolean default true,
   allowed_domains jsonb default '[]',  -- List of allowed origin domains for CORS/security
   sample_rate     numeric default 100, -- 0-100 percentage
@@ -17,22 +18,23 @@ create table if not exists public.rum_configs (
 -- RLS for rum_configs
 alter table public.rum_configs enable row level security;
 
-create policy "Users can read own rum configs"
+create policy "Users can read workspace rum configs"
   on public.rum_configs for select
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id OR exists (select 1 from public.workspace_members wm where wm.workspace_id = rum_configs.workspace_id and wm.user_id = auth.uid()));
 
-create policy "Users can update own rum configs"
+create policy "Users can update workspace rum configs"
   on public.rum_configs for update
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id OR exists (select 1 from public.workspace_members wm where wm.workspace_id = rum_configs.workspace_id and wm.user_id = auth.uid() and wm.role in ('owner', 'admin')));
 
-create policy "Users can insert own rum configs"
+create policy "Users can insert workspace rum configs"
   on public.rum_configs for insert
-  with check (auth.uid() = user_id);
+  with check (auth.uid() = user_id OR exists (select 1 from public.workspace_members wm where wm.workspace_id = rum_configs.workspace_id and wm.user_id = auth.uid()));
 
 -- ── RUM Events (High Volume) ──
 create table if not exists public.rum_events (
   id              uuid primary key default gen_random_uuid(),
   project_id      text not null references public.projects(id) on delete cascade,
+  workspace_id    text references public.workspaces(id) on delete cascade,
   pageview_id     text not null, -- anonymous short-lived id generated client side
   session_id      text not null, -- anonymous short-lived id
   url             text not null,
@@ -61,10 +63,11 @@ create index if not exists idx_rum_events_path on public.rum_events(project_id, 
 -- Selects are protected by RLS.
 alter table public.rum_events enable row level security;
 
-create policy "Users can read own rum events"
+create policy "Users can read workspace rum events"
   on public.rum_events for select
   using (
+    exists (select 1 from public.workspace_members wm where wm.workspace_id = rum_events.workspace_id and wm.user_id = auth.uid()) OR
     project_id in (
-      select id from public.projects where user_id = auth.uid()
+      select id from public.projects p where p.user_id = auth.uid()
     )
   );
