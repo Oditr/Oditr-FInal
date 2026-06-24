@@ -122,7 +122,7 @@ function computeCategoryDeltas(prev: AuditSnapshot, curr: AuditSnapshot): ScoreD
     ...Object.keys(curr.categoryScores || {}),
   ])
 
-  for (const cat of allCats) {
+  for (const cat of Array.from(allCats)) {
     const prevScore = prev.categoryScores?.[cat]?.score ?? 0
     const currScore = curr.categoryScores?.[cat]?.score ?? 0
     deltas.push({

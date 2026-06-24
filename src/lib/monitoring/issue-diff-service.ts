@@ -72,7 +72,7 @@ export function diffIssues(
   const existingIssues: IssueDiff[] = []
 
   // Check current issues against previous
-  for (const [fp, current] of currMap.entries()) {
+  for (const [fp, current] of Array.from(currMap.entries())) {
     const previous = prevMap.get(fp)
 
     if (!previous) {
@@ -104,7 +104,7 @@ export function diffIssues(
   }
 
   // Check for resolved issues (in previous but not in current)
-  for (const [fp, previous] of prevMap.entries()) {
+  for (const [fp, previous] of Array.from(prevMap.entries())) {
     if (!currMap.has(fp)) {
       const diff: IssueDiff = { issue: previous, status: 'resolved', previousSeverity: previous.severity }
       diffs.push(diff)
