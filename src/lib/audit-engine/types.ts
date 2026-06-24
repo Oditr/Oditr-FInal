@@ -54,7 +54,61 @@ export interface AuditIssue {
   fixSnippet?: string
   fixDifficulty: 'easy' | 'medium' | 'hard' | 'unknown'
   revenueRelevant: boolean
+  businessImpactCategory?: 'seo' | 'trust' | 'conversion' | 'discoverability'
+  experimental?: boolean
   createdAt: string
+}
+
+// ── AI-Agent Readiness Result ──
+export type AIReadinessStatus = 'Excellent' | 'Good' | 'Needs Work' | 'Poor'
+export type ConfidenceLevel = 'High' | 'Medium' | 'Low'
+
+export interface CrawlerAccessEntry {
+  name: string
+  status: 'allowed' | 'blocked' | 'not_specified'
+  rule?: string
+  affectedPaths?: string[]
+  confidence: ConfidenceLevel
+}
+
+export interface AIReadinessResult {
+  score: number
+  status: AIReadinessStatus
+  confidence: ConfidenceLevel
+  summary: string
+  crawlerAccess: CrawlerAccessEntry[]
+  llmsTxt: {
+    exists: boolean
+    statusCode: number
+    contentLength: number
+    qualityScore: number
+    importantLinksFound: string[]
+    suggestedTemplate?: string
+  }
+  structuredData: {
+    found: boolean
+    schemas: { type: string; valid: boolean; fields?: string[] }[]
+    missingRecommended: string[]
+  }
+  semanticHtml: {
+    score: number
+    hasMain: boolean
+    hasNav: boolean
+    hasFooter: boolean
+    hasProperH1: boolean
+    hasLangAttr: boolean
+  }
+  discoverability: {
+    sitemapExists: boolean
+    sitemapInRobots: boolean
+    importantPagesFound: string[]
+    importantPagesMissing: string[]
+  }
+  renderability: {
+    score: number
+    warnings: string[]
+  }
+  experimentalNotes: string[]
 }
 
 export interface CategoryResult {

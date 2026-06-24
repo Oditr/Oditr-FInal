@@ -79,8 +79,19 @@ function convertCustomFindingToIssue(url: string, finding: AuditFinding): AuditI
   let diff = finding.recommendation?.fixDifficulty || 'unknown'
   if (finding.recommendation?.estimatedImpact === 'high') diff = 'medium' // fallback mapping
 
+  // Determine revenue relevance and business impact
+  const isAiReadiness = mappedCategory === 'ai_readiness'
+  const revenueRelevant = ['performance', 'seo', 'broken_links', 'mobile', 'ai_readiness'].includes(mappedCategory)
+
+  // Map AI readiness issues to discoverability impact
+  let businessImpactCategory: 'seo' | 'trust' | 'conversion' | 'discoverability' | undefined
+  if (isAiReadiness) businessImpactCategory = 'discoverability'
+  else if (mappedCategory === 'seo') businessImpactCategory = 'seo'
+  else if (mappedCategory === 'security') businessImpactCategory = 'trust'
+  else if (mappedCategory === 'performance' || mappedCategory === 'mobile') businessImpactCategory = 'conversion'
+
   return {
-    id: `custom-${finding.id}-${Date.now().toString(36)}`, // generate semi-unique ID
+    id: `custom-${finding.id}-${Date.now().toString(36)}`,
     title: finding.title,
     description: finding.description,
     category: mappedCategory,
@@ -94,7 +105,9 @@ function convertCustomFindingToIssue(url: string, finding: AuditFinding): AuditI
     recommendation: finding.recommendation?.fix || 'Review and optimize this aspect.',
     fixSnippet: finding.recommendation?.codeSnippet,
     fixDifficulty: diff as 'easy'|'medium'|'hard'|'unknown',
-    revenueRelevant: ['performance', 'seo', 'broken_links', 'mobile'].includes(mappedCategory), // Basic heuristic
+    revenueRelevant,
+    businessImpactCategory,
+    experimental: isAiReadiness ? true : undefined,
     createdAt: new Date().toISOString()
   }
 }

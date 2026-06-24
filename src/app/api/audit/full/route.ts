@@ -517,6 +517,10 @@ export async function GET(req: NextRequest) {
       partialReason: !lighthouseResult ? (psiError || 'PSI unavailable') : !customAuditResult ? (customError || 'Custom audit unavailable') : undefined,
       categoryScores,
       issues: normalizedIssues,
+      // ── AI-Agent Readiness detail (extracted from custom audit ai-readiness category) ──
+      aiReadiness: customAuditResult?.categories
+        ?.find((c: any) => c.category === 'ai-readiness')
+        ?.aiReadinessDetail || null,
       // ── Audit context: connection + location metadata ──
       auditContext: {
         connection: { id: connProfile.id, label: connProfile.label, throughputMbps: connProfile.throughputMbps, expectedRttMs: connProfile.expectedRttMs },

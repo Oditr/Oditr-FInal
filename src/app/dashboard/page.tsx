@@ -10,6 +10,7 @@ import OpportunitiesTab from './OpportunitiesTab'
 import DiagnosticsTab from './DiagnosticsTab'
 import FieldDataTab from './FieldDataTab'
 import SiteAuditTab from './SiteAuditTab'
+import AIReadinessTab from './AIReadinessTab'
 import HistoryTab from './HistoryTab'
 import AnalyticsTab from './AnalyticsTab'
 import { saveScan, getHistory } from '@/lib/scan-store'
@@ -55,7 +56,7 @@ export default function DashboardPage() {
   const [location, setLocation] = useState('US East (Virginia)')
   const [connection, setConnection] = useState('4G (Fast)')
   const [runCount, setRunCount] = useState(0)
-  const [activeTab, setActiveTab] = useState<'overview' | 'opportunities' | 'diagnostics' | 'field' | 'siteaudit' | 'history' | 'analytics'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'opportunities' | 'diagnostics' | 'field' | 'siteaudit' | 'aireadiness' | 'history' | 'analytics'>('overview')
 
   // Progress tracking state
   const [elapsed, setElapsed] = useState(0)
@@ -775,6 +776,7 @@ export default function DashboardPage() {
                 { id: 'opportunities', label: `Opportunities (${result.opportunities?.length ?? 0})`, icon: <Zap size={13} /> },
                 { id: 'diagnostics', label: 'Diagnostics', icon: <Eye size={13} /> },
                 { id: 'field', label: 'Field Data', icon: <Star size={13} /> },
+                { id: 'aireadiness', label: 'AI Readiness', icon: <Rocket size={13} /> },
                 { id: 'history', label: 'History', icon: <Clock size={13} /> },
                 { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={13} /> },
               ] as const).map(t => (
@@ -790,6 +792,7 @@ export default function DashboardPage() {
             {activeTab === 'diagnostics' && <DiagnosticsTab result={result} />}
             {activeTab === 'field' && <FieldDataTab result={result} />}
             {activeTab === 'siteaudit' && <SiteAuditTab result={result} />}
+            {activeTab === 'aireadiness' && <AIReadinessTab result={result} />}
             {activeTab === 'history' && <HistoryTab currentUrl={result.url} />}
             {activeTab === 'analytics' && <AnalyticsTab />}
 
