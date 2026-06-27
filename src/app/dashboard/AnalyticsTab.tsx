@@ -5,7 +5,7 @@ import {
   BarChart3, Activity, Clock, Zap, Globe, AlertTriangle,
   CheckCircle, XCircle, RefreshCw, TrendingUp, Database, Eye,
 } from 'lucide-react'
-import Sparkline from '@/components/Sparkline'
+import Sparkline from '@/components/ui/Sparkline'
 
 interface AnalyticsSummary {
   daily: {

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Code2, CheckSquare, Gauge, TrendingUp, Search, Star, Activity } from 'lucide-react'
 import BenchmarkSection from '@/components/BenchmarkSection'
-import { WebApplicationJsonLd, OrganizationJsonLd } from '@/components/JsonLd'
+import { WebApplicationJsonLd, OrganizationJsonLd } from '@/components/seo/JsonLd'
 import ExitIntentWrapper from '@/components/ExitIntentWrapper'
 import SocialProofWrapper from '@/components/SocialProofWrapper'
 

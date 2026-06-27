@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Zap, ShieldCheck, AlertTriangle, BarChart3, ExternalLink, Code, Info, CheckCircle2 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
-import ScoreRing from '@/components/ScoreRing'
+import ScoreRing from '@/components/ui/ScoreRing'
 import { AuditIssue, CategoryScore, UnifiedCategory } from '@/lib/audit-engine/types'
 
 // ── Types ──

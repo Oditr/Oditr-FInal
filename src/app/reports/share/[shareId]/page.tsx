@@ -2,7 +2,7 @@ import React from 'react'
 import { Metadata } from 'next'
 import { getClientReportByShareId } from '@/lib/agency/report-builder-service'
 import { PriorityFixMatrix } from '@/components/agency/PriorityFixMatrix'
-import ScoreRing from '@/components/ScoreRing'
+import ScoreRing from '@/components/ui/ScoreRing'
 
 export async function generateMetadata({ params }: { params: Promise<{ shareId: string }> }): Promise<Metadata> {
   const { shareId } = await params

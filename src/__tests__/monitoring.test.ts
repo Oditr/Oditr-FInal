@@ -6,13 +6,13 @@ import type { IssueSnapshot, CwvSnapshot } from '../lib/monitoring/types'
 
 describe('Monitoring Engine - Issue Diff Service', () => {
   const prevIssues: IssueSnapshot[] = [
-    { id: '1', title: 'Missing alt text', category: 'accessibility', severity: 'medium', affectedUrl: '/' },
-    { id: '2', title: 'Broken Link', category: 'links', severity: 'high', affectedUrl: '/about' },
+    { id: '1', title: 'Missing alt text', description: 'desc', category: 'accessibility', severity: 'medium', affectedUrl: '/' },
+    { id: '2', title: 'Broken Link', description: 'desc', category: 'links', severity: 'high', affectedUrl: '/about' },
   ]
 
   const currIssues: IssueSnapshot[] = [
-    { id: '1b', title: 'Missing alt text', category: 'accessibility', severity: 'high', affectedUrl: '/' }, // Worsened
-    { id: '3', title: 'Server Error 500', category: 'links', severity: 'critical', affectedUrl: '/contact' }, // New
+    { id: '1b', title: 'Missing alt text', description: 'desc', category: 'accessibility', severity: 'high', affectedUrl: '/' }, // Worsened
+    { id: '3', title: 'Server Error 500', description: 'desc', category: 'links', severity: 'critical', affectedUrl: '/contact' }, // New
     // Broken link resolved
   ]
 

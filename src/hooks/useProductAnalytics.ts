@@ -6,7 +6,7 @@
 // Fire-and-forget. Never blocks the UI.
 
 import { useCallback, useRef } from 'react'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { ProductEvents, type ProductEventName } from '@/lib/analytics/events'
 
 export type { ProductEventName }

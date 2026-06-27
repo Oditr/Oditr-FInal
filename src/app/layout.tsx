@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from '@/components/ThemeProvider'
-import { AuthProvider } from '@/components/AuthProvider'
-import { PostHogClientProvider } from '@/components/PostHogProvider'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
-import { WebSiteJsonLd } from '@/components/JsonLd'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { AuthProvider } from '@/components/providers/AuthProvider'
+import { PostHogClientProvider } from '@/components/providers/PostHogProvider'
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
+import { WebSiteJsonLd } from '@/components/seo/JsonLd'
 
 const inter = Inter({
   subsets: ['latin'],

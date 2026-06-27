@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import CodeBlock from '@/components/CodeBlock'
+import CodeBlock from '@/components/ui/CodeBlock'
 import { Code2, Filter } from 'lucide-react'
 
 const snippets = [
