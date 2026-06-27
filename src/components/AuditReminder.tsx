@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, TrendingUp, Clock } from 'lucide-react'
 import { getHistory, type StoredScan } from '@/lib/scan-store'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 interface AuditReminderProps {
   onRunAudit: (url: string) => void

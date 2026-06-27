@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { BookOpen, Zap, MousePointer, Layers, ArrowRight, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
-import BeforeAfter from '@/components/BeforeAfter'
+import BeforeAfter from '@/components/ui/BeforeAfter'
 import Link from 'next/link'
 
 const guides = [

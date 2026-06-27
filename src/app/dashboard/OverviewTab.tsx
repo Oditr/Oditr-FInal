@@ -1,5 +1,5 @@
 'use client'
-import ScoreRing from '@/components/ScoreRing'
+import ScoreRing from '@/components/ui/ScoreRing'
 import type { AuditResult } from './types'
 import { scoreColor, waterfallItems, typeColors, filmStrip } from './utils'
 

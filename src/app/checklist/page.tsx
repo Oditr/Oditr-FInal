@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { CheckSquare, Square, RefreshCw, Download } from 'lucide-react'
-import ScoreRing from '@/components/ScoreRing'
+import ScoreRing from '@/components/ui/ScoreRing'
 import { scoreColor as getScoreColor } from '../dashboard/utils'
 
 type CheckItem = { id: string; text: string; category: string; impact: 'high' | 'medium' | 'low' }

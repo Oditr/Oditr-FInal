@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { Check, Star, Zap, Shield, Building2, ArrowRight, ChevronDown, ChevronUp, Sparkles, BarChart3, Download, Globe, Lock, Code2, Crown, Loader2, Rocket } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 import AuthModal from '@/components/AuthModal'
-import { FAQJsonLd } from '@/components/JsonLd'
+import { FAQJsonLd } from '@/components/seo/JsonLd'
 
 // ── 4-Tier Plan Data ──
 const plans = [

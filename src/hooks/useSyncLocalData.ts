@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { migrateLocalToCloud } from '@/lib/scan-store'
 
 /**

@@ -6,15 +6,15 @@ import {
   Smartphone, Monitor, BarChart3, GitCompare,
   X, ArrowUpRight, ArrowDownRight, Minus, FileSpreadsheet, FileJson, Lock,
 } from 'lucide-react'
-import ScoreRing from '@/components/ScoreRing'
-import Sparkline from '@/components/Sparkline'
+import ScoreRing from '@/components/ui/ScoreRing'
+import Sparkline from '@/components/ui/Sparkline'
 import {
   getHistory, getUrlHistory, deleteScan, clearHistory,
   exportHistory, relativeTime, groupByDate,
   type StoredScan,
 } from '@/lib/scan-store'
 import { scoreColor } from './utils'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 import Link from 'next/link'
 
 interface HistoryTabProps {

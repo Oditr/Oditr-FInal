@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, ArrowLeft, Clock, BookOpen, Zap } from 'lucide-react'
 import { guides, getGuideBySlug, getRelatedGuides, categoryColors, categoryLabels } from '@/data/guides'
-import { ArticleJsonLd } from '@/components/JsonLd'
+import { ArticleJsonLd } from '@/components/seo/JsonLd'
 
 // ── Static params for SSG ──
 export async function generateStaticParams() {

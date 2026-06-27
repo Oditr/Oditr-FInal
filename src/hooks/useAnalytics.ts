@@ -5,7 +5,7 @@
 // Fire-and-forget. Never blocks UI. Uses sendBeacon on unload.
 
 import { useEffect, useRef, useCallback } from 'react'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 interface ClientEvent {
   event_type: string

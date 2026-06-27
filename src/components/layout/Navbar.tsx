@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Zap, Menu, X, User, LogOut } from 'lucide-react'
-import ThemeToggle from './ThemeToggle'
-import { useAuth } from './AuthProvider'
-import AuthModal from './AuthModal'
+import ThemeToggle from '../ui/ThemeToggle'
+import { useAuth } from '../providers/AuthProvider'
+import AuthModal from '../AuthModal'
 
 const links = [
   { href: '/', label: 'Home' },
